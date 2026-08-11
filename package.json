@@ -1,0 +1,70 @@
+{
+  "name": "babooku",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplikasi web toko buku online Babooku built with React, Vite, Tailwind CSS, & Supabase.",
+  "type": "module",
+  "main": "index.js",
+  "homepage": "https://github.com/username/babooku#readme",
+  "bugs": {
+    "url": "https://github.com/username/babooku/issues",
+    "email": "support@babooku.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/babooku.git"
+  },
+  "keywords": [
+    "babooku",
+    "bookstore",
+    "react",
+    "vite",
+    "tailwind",
+    "supabase",
+    "zustand"
+  ],
+  "author": "Nama Kamu <email@domain.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "serve": "node server.js",
+    "user": "node resources/tools/create-user.js",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "seed": "node database/seeders/index.js",
+    "make:migration": "node app/Commands/makeMigration.js",
+    "make:seeder": "node app/Commands/makeSeeder.js",
+    "migrate": "node app/Commands/migrate.js",
+    "make:secret": "node app/Commands/makeSecret.js",
+    "db:seed": "node database/seeders/DatabaseSeeder.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.2",
+    "bcryptjs": "^3.0.3",
+    "eruda": "^3.4.3",
+    "express": "^5.2.1",
+    "lucide-react": "^0.300.0",
+    "mysql2": "^3.23.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.0",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.5.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "dotenv": "^17.4.2",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^4.0.0",
+    "vite": "^5.0.8"
+  }
+}

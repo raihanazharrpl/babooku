@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* Kustomisasi Theme Babooku (Tailwind CSS v4) */
+@theme {
+  /* ==========================================================================
+     FONTS CONFIGURATION
+     ========================================================================== */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Merriweather", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "Fira Code", JetBrains Mono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+
+  /* ==========================================================================
+     COMPLETE BLUE COLOR PALETTE
+     ========================================================================== */
+  
+  /* Main Colors */
+  --color-merino: #F5EEDD;
+  --color-rock-blue: #84B3CE;
+  --color-venice-blue: #16587B;
+
+  /* Sub Colors: Merino */
+  --color-merino-50: #FDFAF5;
+  --color-merino-100: #FBF6EC;
+  --color-merino-200: #F5EEDD; /* Base */
+  --color-merino-300: #ECE0C7;
+  --color-merino-400: #E2D1B0;
+
+  /* Sub Colors: Rock Blue */
+  --color-rock-blue-light: #A3C7DC;
+  --color-rock-blue-DEFAULT: #84B3CE; /* Base */
+  --color-rock-blue-dark: #659CBE;
+
+  /* Sub Colors: Venice Blue (Shade System 50 - 950) */
+  --color-venice-blue-50: #EBF4F9;
+  --color-venice-blue-100: #D0E5F2;
+  --color-venice-blue-200: #A3CBE3;
+  --color-venice-blue-300: #71ACD2;
+  --color-venice-blue-400: #448EC0;
+  --color-venice-blue-500: #2572A5;
+  --color-venice-blue-600: #195B88;
+  --color-venice-blue-700: #16587B; /* Base */
+  --color-venice-blue-800: #144967;
+  --color-venice-blue-900: #143E57;
+  --color-venice-blue-950: #0D283A;
+}
