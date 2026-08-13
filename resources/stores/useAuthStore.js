@@ -1,9 +1,21 @@
 // resources/stores/useAuthStore.js
 import { create } from 'zustand'
 
+// Helper untuk cek token awal dari localStorage
+const initialToken = localStorage.getItem('token') || null
+const initialUser = (() => {
+  try {
+    const savedUser = localStorage.getItem('user')
+    return savedUser ? JSON.parse(savedUser) : null
+  } catch (e) {
+    return null
+  }
+})()
+
 export const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('user')) || null,
-  token: localStorage.getItem('token') || null,
+  user: initialUser,
+  token: initialToken,
+  isAuthenticated: Boolean(initialToken), // <-- TAMBAHAN PENTING
   loading: false,
   error: null,
 
@@ -17,28 +29,32 @@ export const useAuthStore = create((set) => ({
         body: JSON.stringify({ email, password }),
       })
 
-      // [PENTING]: Cegah error "Unexpected end of JSON input"
-      // Kita ambil text mentah dulu, baru diubah ke JSON.
       const textData = await response.text()
-      
       let data = {}
+      
       try {
         data = textData ? JSON.parse(textData) : {}
       } catch (parseError) {
-        // Jika response bukan JSON (misal HTML error halaman Vercel), tangkap disini
         throw new Error('Respons server tidak valid (Bukan JSON).')
       }
 
-      // Cek Status HTTP (400, 401, 500)
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Gagal masuk, periksa kembali data Anda.')
       }
 
-      // Berhasil
+      // Simpan ke localStorage
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      set({ user: data.user, token: data.token, loading: false, error: null })
+      // Update state dengan isAuthenticated: true
+      set({ 
+        user: data.user, 
+        token: data.token, 
+        isAuthenticated: true, 
+        loading: false, 
+        error: null 
+      })
+
       return { success: true }
       
     } catch (err) {
@@ -47,7 +63,6 @@ export const useAuthStore = create((set) => ({
     }
   },
 
-  // === TAMBAHKAN FUNGSI REGISTER INI ===
   register: async (name, email, password) => {
     set({ loading: true, error: null })
 
@@ -59,8 +74,8 @@ export const useAuthStore = create((set) => ({
       })
 
       const textData = await response.text()
-      
       let data = {}
+      
       try {
         data = textData ? JSON.parse(textData) : {}
       } catch (parseError) {
@@ -71,11 +86,17 @@ export const useAuthStore = create((set) => ({
         throw new Error(data.message || 'Gagal mendaftar, silakan periksa data Anda.')
       }
 
-      // Auto-Login setelah mendaftar
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      set({ user: data.user, token: data.token, loading: false, error: null })
+      set({ 
+        user: data.user, 
+        token: data.token, 
+        isAuthenticated: true, 
+        loading: false, 
+        error: null 
+      })
+
       return { success: true }
       
     } catch (err) {
@@ -87,6 +108,6 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    set({ user: null, token: null, error: null })
+    set({ user: null, token: null, isAuthenticated: false, error: null })
   },
 }))

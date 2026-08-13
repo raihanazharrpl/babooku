@@ -1,10 +1,16 @@
 // resources/layouts/part/Sidebar.jsx
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Home, Store, Phone, Briefcase, User, LogOut } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Home, Store, Phone, Briefcase, User, LogIn, LogOut } from 'lucide-react'
+import { useAuthStore } from '../../stores/useAuthStore'
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation()
+  const navigate = useNavigate()
+  
+  // Ambil state token & fungsi logout dari Zustand Store
+  const { token, logout } = useAuthStore()
+  const isAuthenticated = Boolean(token)
 
   // Helper untuk mengecek rute aktif
   const isActive = (path) => location.pathname === path
@@ -15,6 +21,12 @@ export default function Sidebar({ isOpen, onClose }) {
     { name: 'Contact', path: '/contact', icon: Phone },
     { name: 'Portfolio', path: '/about', icon: Briefcase },
   ]
+
+  const handleLogout = () => {
+    logout()
+    if (onClose) onClose()
+    navigate('/auth/login')
+  }
 
   return (
     <>
@@ -57,34 +69,51 @@ export default function Sidebar({ isOpen, onClose }) {
           })}
         </nav>
 
-        {/* Bagian Bawah: Profile & Logout */}
+        {/* Bagian Bawah: Profile / Login & Logout */}
         <div className="pt-4 border-t border-merino-300/60 space-y-1.5">
           <span className="text-xs font-bold text-venice-blue-600/60 uppercase tracking-wider px-3">
             Akun
           </span>
 
-          <Link
-            to="/profile"
-            onClick={onClose}
-            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
-              isActive('/profile')
-                ? 'bg-venice-blue-800 text-merino font-bold shadow-sm'
-                : 'text-venice-blue-900 hover:bg-merino-200/60 hover:text-venice-blue-950'
-            }`}
-          >
-            <User className={`w-5 h-5 ${isActive('/profile') ? 'text-rock-blue-light' : 'text-venice-blue-600/70'}`} />
-            <span>Profile</span>
-          </Link>
+          {isAuthenticated ? (
+            /* --- TAMPILAN JIKA SUDAH LOGIN --- */
+            <>
+              <Link
+                to="/profile"
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                  isActive('/profile')
+                    ? 'bg-venice-blue-800 text-merino font-bold shadow-sm'
+                    : 'text-venice-blue-900 hover:bg-merino-200/60 hover:text-venice-blue-950'
+                }`}
+              >
+                <User className={`w-5 h-5 ${isActive('/profile') ? 'text-rock-blue-light' : 'text-venice-blue-600/70'}`} />
+                <span>Profile</span>
+              </Link>
 
-          <button
-            onClick={() => {
-              if (onClose) onClose()
-            }}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-red-700 hover:bg-red-50 hover:text-red-800 transition-colors"
-          >
-            <LogOut className="w-5 h-5 text-red-600" />
-            <span>Logout</span>
-          </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-red-700 hover:bg-red-50 hover:text-red-800 transition-colors"
+              >
+                <LogOut className="w-5 h-5 text-red-600" />
+                <span>Logout</span>
+              </button>
+            </>
+          ) : (
+            /* --- TAMPILAN JIKA BELUM LOGIN --- */
+            <Link
+              to="/auth/login"
+              onClick={onClose}
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                isActive('/auth/login')
+                  ? 'bg-venice-blue-800 text-merino font-bold shadow-sm'
+                  : 'text-venice-blue-900 hover:bg-merino-200/60 hover:text-venice-blue-950'
+              }`}
+            >
+              <LogIn className={`w-5 h-5 ${isActive('/auth/login') ? 'text-rock-blue-light' : 'text-venice-blue-600/70'}`} />
+              <span>Masuk</span>
+            </Link>
+          )}
         </div>
       </aside>
     </>

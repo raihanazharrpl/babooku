@@ -5,14 +5,14 @@
   "description": "Aplikasi web toko buku online Babooku built with React, Vite, Tailwind CSS, & Supabase.",
   "type": "module",
   "main": "index.js",
-  "homepage": "https://github.com/username/babooku#readme",
+  "homepage": "https://github.com/raihanazharrpl/babooku#readme",
   "bugs": {
-    "url": "https://github.com/username/babooku/issues",
+    "url": "https://github.com/raihanazharrpl/babooku/issues",
     "email": "support@babooku.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/username/babooku.git"
+    "url": "git+https://github.com/raihanazharrpl/babooku.git"
   },
   "keywords": [
     "babooku",
@@ -37,7 +37,8 @@
     "make:seeder": "node app/Commands/makeSeeder.js",
     "migrate": "node app/Commands/migrate.js",
     "make:secret": "node app/Commands/makeSecret.js",
-    "db:seed": "node database/seeders/DatabaseSeeder.js"
+    "db:seed": "node database/seeders/DatabaseSeeder.js",
+    "make:env-example": "node app/Commands/makeEnvExample.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
