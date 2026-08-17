@@ -1,6 +1,6 @@
 // routes/api/register.js
-import { query, queryOne } from '../../resources/helpers/dbHelper.js';
-import { config } from '../../config/app.js';
+import { query, queryOne } from '@/resources/helpers/dbHelper.js';
+import { config } from '@/config/app.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 

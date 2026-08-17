@@ -1,5 +1,5 @@
 // resources/helpers/dbHelper.js
-import { dbPool } from '../../config/app.js';
+import { dbPool } from '@/resources/lib/dbPool.js';
 
 /**
  * Fungsi aman untuk menjalankan kueri SQL.

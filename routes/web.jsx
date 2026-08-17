@@ -10,9 +10,14 @@ import AuthLayout from '../resources/layouts/AuthLayout.jsx'
 import LandingPage from '../resources/pages/LandingPage/index.jsx'
 import HomePage from '../resources/pages/HomePage/index.jsx'
 import StorePage from '../resources/pages/StorePage/index.jsx'
+import ContactPage from '../resources/pages/ContactPage/index.jsx'
+import AboutPage from '../resources/pages/AboutPage/index.jsx'
 import LoginPage from '../resources/pages/Auth/LoginPage/index.jsx'
 import RegisterPage from '../resources/pages/Auth/RegisterPage/index.jsx'
 import ProfilePage from '../resources/pages/ProfilePage/index.jsx'
+import CartPage from '../resources/pages/CartPage/index.jsx'
+import BookDetailPage from '../resources/pages/BookDetailPage/index.jsx'
+import CheckoutPage from '../resources/pages/CheckoutPage/index.jsx'
 
 export default function AppRoutes() {
   return (
@@ -22,10 +27,15 @@ export default function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/store" element={<StorePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Protected (Must Login) */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/book" element={<BookDetailPage />} />
         </Route>
       </Route>
 
