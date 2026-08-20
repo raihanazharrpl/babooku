@@ -42,6 +42,7 @@
   },
   "imports": {
     "#config/*": "./config/*",
+    "#routes/*": "./routes/*",
     "#models/*": "./app/Models/*",
     "#middlewares/*": "./app/Middlewares/*",
     "#controllers/*": "./app/Controllers/*",
