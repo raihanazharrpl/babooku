@@ -1,6 +1,5 @@
-// routes/api/register.js
-import { query, queryOne } from '@/resources/helpers/dbHelper.js';
-import { config } from '@/config/app.js';
+import { query, queryOne } from '#resources/helpers/dbHelper.js';
+import { database } from '#config/database.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -25,31 +24,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Password minimal 6 karakter.' });
     }
 
-    // 2. Cek apakah email sudah terdaftar di database
-    const existingUser = await queryOne('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
+    // 2. Cek apakah email sudah terdaftar (Ubah ? jadi $1)
+    const existingUser = await queryOne('SELECT id FROM users WHERE email = $1 LIMIT 1', [email]);
     if (existingUser) {
       return res.status(409).json({ success: false, message: 'Email sudah terdaftar. Silakan gunakan email lain atau login.' });
     }
 
-    // 3. Hash Password (Sangat Aman)
+    // 3. Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Masukkan data ke Database
-    const result = await query(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+    // 4. Insert data ke Database Postgres (Gunakan RETURNING id)
+    const rows = await query(
+      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id',
       [name, email, hashedPassword, 'customer']
     );
 
-    const newUserId = result.insertId; // ID user yang baru saja dibuat
+    const newUserId = rows[0].id; // Ambil ID dari RETURNING id
 
-    // 5. Generate JWT Token untuk Auto-Login
+    // 5. Generate JWT Token
     const token = jwt.sign(
       { id: newUserId, role: 'customer' },
-      config.app.jwtSecret,
+      database.app.jwtSecret,
       { expiresIn: '24h' }
     );
 
-    // Data user yang dikembalikan ke frontend
     const user = {
       id: newUserId,
       name,

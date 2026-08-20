@@ -1,6 +1,5 @@
-// routes/api/login.js
-import { queryOne } from '../../resources/helpers/dbHelper.js';
-import { config } from '../../config/app.js';
+import { queryOne } from '#resources/helpers/dbHelper.js';
+import { database } from '#config/database.js'; // pastikan merujuk ke config
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -12,11 +11,10 @@ export default async function handler(req, res) {
   try {
     const { email, password } = req.body;
     
-    // --- [DEBUG START] ---
     console.log(`\n[LOGIN ATTEMPT] Email: ${email}`);
 
-    // 1. Ambil data dari MariaDB
-    const user = await queryOne('SELECT id, name, email, password, role FROM users WHERE email = ? LIMIT 1', [email]);
+    // 1. Ambil data dari PostgreSQL (Ubah ? jadi $1)
+    const user = await queryOne('SELECT id, name, email, password, role FROM users WHERE email = $1 LIMIT 1', [email]);
 
     if (!user) {
       console.log(`❌ [DEBUG]: Email '${email}' TIDAK ADA di database.`);
@@ -29,17 +27,14 @@ export default async function handler(req, res) {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
-      console.log(`❌ [DEBUG]: Password SALAH. Hash tidak cocok dengan '${password}'.`);
+      console.log(`❌ [DEBUG]: Password SALAH.`);
       return res.status(401).json({ success: false, message: 'Kredensial tidak valid.' });
     }
-
-    console.log(`✅ [DEBUG]: Password BENAR! Membuat sesi login...`);
-    // --- [DEBUG END] ---
 
     // 3. Generate Token
     const token = jwt.sign(
       { id: user.id, role: user.role },
-      config.app.jwtSecret,
+      database.app.jwtSecret,
       { expiresIn: '24h' }
     );
 

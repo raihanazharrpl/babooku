@@ -40,14 +40,24 @@
     "db:seed": "node database/seeders/DatabaseSeeder.js",
     "make:env-example": "node app/Commands/makeEnvExample.js"
   },
+  "imports": {
+    "#config/*": "./config/*",
+    "#models/*": "./app/Models/*",
+    "#middlewares/*": "./app/Middlewares/*",
+    "#controllers/*": "./app/Controllers/*",
+    "#resources/*": "./resources/*"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
     "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
     "eruda": "^3.4.3",
     "express": "^5.2.1",
     "framer-motion": "^13.1.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.300.0",
     "mysql2": "^3.23.2",
+    "pg": "^8.23.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.0",

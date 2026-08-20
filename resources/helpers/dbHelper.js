@@ -1,17 +1,18 @@
 // resources/helpers/dbHelper.js
-import { dbPool } from '@/resources/lib/dbPool.js';
+import dbPool from '#resources/libs/dbPool.js'; // Sesuaikan path jika tidak pakai alias #
 
 /**
- * Fungsi aman untuk menjalankan kueri SQL.
- * Selalu gunakan parameter `?` dan array `params` untuk MENCEGAH SQL INJECTION.
+ * Fungsi aman untuk menjalankan kueri SQL di PostgreSQL.
+ * Gunakan placeholder $1, $2, dst. dan array `params` untuk MENCEGAH SQL INJECTION.
+ * Contoh: query('SELECT * FROM users WHERE email = $1', [email])
  */
 export async function query(sql, params = []) {
   try {
-    // .execute() = Prepared Statement (Aman dari Bypass 1=1)
-    const [rows] = await dbPool.execute(sql, params);
+    // pg menggunakan dbPool.query() dan hasilnya disimpan di property .rows
+    const { rows } = await dbPool.query(sql, params);
     return rows;
   } catch (error) {
-    // Jangan bocorkan pesan error SQL ke Frontend (Cegah Information Disclosure)
+    // Log detail error di server, tapi sembunyikan dari response client
     console.error('[DB ERROR]:', error.message);
     throw new Error('Terjadi kesalahan pada database.');
   }

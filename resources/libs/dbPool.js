@@ -1,8 +1,13 @@
-import mysql from 'mysql2/promise';
-import { config } from '@/config/app.js';
+// resources/libs/dbPool.js
+import pg from 'pg';
+import { database } from '#config/database.js';
 
-export const dbPool = mysql.createPool({
-  ...config.db,
-  waitForConnections: true,
-  queueLimit: 0,
+const { Pool } = pg;
+
+// Inisialisasi pool PostgreSQL
+const pool = new Pool({
+  connectionString: database.db.connectionString,
+  ssl: database.db.ssl,
 });
+
+export default pool;

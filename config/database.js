@@ -1,10 +1,10 @@
-// config/app.js
+// config/database.js
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const config = {
+export const database = {
   app: {
     jwtSecret: process.env.JWT_SECRET,
   },
@@ -14,6 +14,7 @@ export const config = {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'babooku',
     port: Number(process.env.DB_PORT) || 3306,
+    connectionString: process.env.DATABASE_URL,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   }
 };

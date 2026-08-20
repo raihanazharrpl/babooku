@@ -1,1 +1,2 @@
-export { dbPool, config } from './database.js';
+// config/app.js
+export { database } from './database.js';
