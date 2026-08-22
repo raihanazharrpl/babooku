@@ -6,6 +6,7 @@ import {
   Package, ArrowRight, Star, Users, Library, 
   BookMarked, ChevronRight, ShoppingCart
 } from 'lucide-react';
+import { getAssetUrl } from '@/resources/helpers/assetsHelper.js';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -47,11 +48,12 @@ export default function LandingPage() {
       
       {/* 1. HERO SECTION */}
       <div className="relative w-full aspect-[3/4] md:aspect-auto md:h-[85vh] overflow-hidden">
-        <img 
-          src="/storage/assets/images/statis/wallpaper-landing-page.jpg" 
-          alt="Perpustakaan Babooku" 
-          className="absolute inset-0 w-full h-full object-cover object-center scale-110 transform-gpu"
-        />
+<img 
+  src={getAssetUrl('static/wallpaper-landing-page.jpg')} 
+  alt="Perpustakaan Babooku" 
+  className="absolute inset-0 w-full h-full object-cover object-center scale-110 transform-gpu"
+/>
+
         
         {/* Gradasi Lembut ke Warna Merino-50 di Bagian Bawah */}
         <div className="absolute inset-0 bg-gradient-to-b from-venice-blue-950/85 via-venice-blue-900/60 to-merino-50 flex flex-col justify-between px-6 pt-12 md:pt-24 pb-32 sm:px-12 md:px-20">
