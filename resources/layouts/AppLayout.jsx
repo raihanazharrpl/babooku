@@ -9,7 +9,7 @@ export default function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen flex flex-col bg-merino-50 font-sans text-venice-blue-950">
       {/* Header Sticky */}
       <NavbarPrimary 
         isSidebarOpen={isSidebarOpen} 
@@ -18,9 +18,10 @@ export default function AppLayout() {
 
       {/* Container Utama */}
       <div className="flex-1 flex w-full relative">
+        {/* Sidebar hanya ada & aktif di mode Mobile */}
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-        {/* Main meluas penuh dan menangani overflow horizontal jika ada */}
+        {/* Main Content Meluas Penuh (Tanpa Sidebar di Mode Desktop) */}
         <main className="flex-1 min-w-0 w-full overflow-x-hidden">
           <Outlet />
         </main>
