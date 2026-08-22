@@ -6,6 +6,7 @@ import {
   Menu, X, Home, Store, Phone, Briefcase, 
   User, LogOut, ShoppingBag, LogIn, UserPlus 
 } from 'lucide-react'
+import { getAssetUrl } from '@/resources/helpers/assetsHelper.js';
 
 export default function NavbarPrimary({ isSidebarOpen, onToggleSidebar }) {
   const location = useLocation()
@@ -34,27 +35,28 @@ export default function NavbarPrimary({ isSidebarOpen, onToggleSidebar }) {
   return (
     <header className="sticky top-0 left-0 right-0 w-full bg-merino-50/90 backdrop-blur-md border-b border-merino-300/60 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        
+            
         {/* KIRI: Brand Logo & Text Babooku */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div 
-            className="w-9 h-9 bg-venice-blue-900 transition-transform duration-300 group-hover:scale-105"
-            style={{
-              maskImage: 'url(/storage/assets/images/statis/logo-only-500.png)',
-              WebkitMaskImage: 'url(/storage/assets/images/statis/logo-only-500.png)',
-              maskSize: 'contain',
-              WebkitMaskSize: 'contain',
-              maskRepeat: 'no-repeat',
-              WebkitMaskRepeat: 'no-repeat',
-              maskPosition: 'center',
-              WebkitMaskPosition: 'center',
-            }}
-            aria-label="Babooku Logo"
-          />
-          <span className="text-xl font-display font-black text-venice-blue-900 tracking-tight">
-            Babooku
-          </span>
-        </Link>
+      <div 
+        className="w-9 h-9 bg-venice-blue-900 transition-transform duration-300 group-hover:scale-105"
+        style={{
+          maskImage: `url(${getAssetUrl('static/logo-only-500.png')})`,
+          WebkitMaskImage: `url(${getAssetUrl('static/logo-only-500.png')})`,
+          maskSize: 'contain',
+          WebkitMaskSize: 'contain',
+          maskRepeat: 'no-repeat',
+          WebkitMaskRepeat: 'no-repeat',
+          maskPosition: 'center',
+          WebkitMaskPosition: 'center',
+        }}
+        aria-label="Babooku Logo"
+      />
+      <span className="text-xl font-display font-black text-venice-blue-900 tracking-tight">
+        Babooku
+      </span>
+    </Link>
+
 
         {/* KANAN (DESKTOP): Navigasi Horizontal */}
         <div className="hidden md:flex items-center justify-end flex-1 max-w-[75%] overflow-x-auto no-scrollbar scroll-smooth py-1 px-2 gap-1.5">
