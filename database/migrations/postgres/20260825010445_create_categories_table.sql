@@ -1,0 +1,10 @@
+-- Migration (PostgreSQL / Supabase): create_categories_table
+-- Created at: 2026-08-24T18:04:45.612Z
+
+CREATE TABLE IF NOT EXISTS categories (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    slug VARCHAR(60) NOT NULL UNIQUE
+);
+
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;

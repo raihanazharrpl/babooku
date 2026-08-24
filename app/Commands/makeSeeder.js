@@ -1,70 +1,89 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import inquirer from 'inquirer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 1. Ambil nama seeder dari argumen terminal (misal: UserSeeder)
-const seederNameInput = process.argv[2];
+async function main() {
+  // 1. Ambil nama seeder dari CLI argumen jika ada
+  let seederNameInput = process.argv[2];
 
-if (!seederNameInput) {
-  console.error('\x1b[31m%s\x1b[0m', '❌ Error: Harap masukkan nama seeder!');
-  console.log('Contoh: npm run make:seeder UserSeeder\n');
-  process.exit(1);
+  if (!seederNameInput) {
+    const answer = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Masukkan nama seeder (contoh: UserSeeder atau CategorySeeder):',
+        validate: (input) => (input.trim() ? true : 'Nama seeder tidak boleh kosong!'),
+      },
+    ]);
+    seederNameInput = answer.name;
+  }
+
+  // Format nama seeder (PascalCase & akhiran 'Seeder')
+  let cleanName = seederNameInput.replace(/\.js$/i, '').trim();
+  cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+
+  if (!cleanName.endsWith('Seeder')) {
+    cleanName += 'Seeder';
+  }
+
+  const fileName = `${cleanName}.js`;
+  const targetDir = path.resolve(__dirname, '../../database/seeders');
+
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const filePath = path.join(targetDir, fileName);
+
+  if (fs.existsSync(filePath)) {
+    console.error(
+      '\x1b[31m%s\x1b[0m',
+      `🚫 Cancelled: Seeder '${fileName}' sudah ada di folder database/seeders/!`
+    );
+    process.exit(1);
+  }
+
+  // 2. Boilerplate Template Seeder Multi-Database (MySQL & Postgres)
+  const seederTemplate = `/**
+ * Seeder: ${cleanName}
+ * Description: Isikan deskripsi data yang dimasukkan di sini.
+ */
+
+// Logic Seeding untuk MySQL
+export async function seedMySQL(connection) {
+  // Contoh query MySQL:
+  // await connection.query(
+  //   \`INSERT INTO example (name) VALUES (?) ON DUPLICATE KEY UPDATE name=VALUES(name)\`,
+  //   ['Sample Data']
+  // );
+
+  console.log('  └─ 🐬 [MySQL] ${cleanName} executed.');
 }
 
-// Format nama seeder (menghilangkan ekstensi jika ditulis manual dan memastikan PascalCase/Huruf Depan Kapital)
-let cleanName = seederNameInput.replace(/\.js$/i, '');
-cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+// Logic Seeding untuk PostgreSQL / Supabase
+export async function seedPostgres(client) {
+  // Contoh query Postgres:
+  // await client.query(
+  //   \`INSERT INTO example (name) VALUES ($1) ON CONFLICT (name) DO NOTHING\`,
+  //   ['Sample Data']
+  // );
 
-// Append 'Seeder' di belakang jika user lupa mengetiknya
-if (!cleanName.endsWith('Seeder')) {
-  cleanName += 'Seeder';
-}
-
-const fileName = `${cleanName}.js`;
-
-// 2. Tentukan target folder database/seeders/
-const targetDir = path.resolve(__dirname, '../../database/seeders');
-
-if (!fs.existsSync(targetDir)) {
-  fs.mkdirSync(targetDir, { recursive: true });
-}
-
-// 🔒 FITUR KEAMANAN: Cek apakah seeder dengan nama ini sudah ada
-const filePath = path.join(targetDir, fileName);
-
-if (fs.existsSync(filePath)) {
-  console.error(
-    '\x1b[31m%s\x1b[0m',
-    `🚫 Cancelled: Seeder '${fileName}' sudah ada di folder database/seeders/!`
-  );
-  process.exit(1);
-}
-
-// 3. Boilerplate Template Seeder
-const functionName = `run${cleanName}`;
-const seederTemplate = `import mysql from 'mysql2/promise';
-
-export async function ${functionName}(connection) {
-  // Tulis logic query seeder kamu di sini
-  // Example:
-  // const data = [
-  //   ['Nama Data 1', 'value1'],
-  //   ['Nama Data 2', 'value2']
-  // ];
-  // await connection.query('INSERT INTO table_name (column1, column2) VALUES ?', [data]);
-
-  console.log('  └─ ✅ ${cleanName} executed successfully.');
+  console.log('  └─ ⚡ [Postgres] ${cleanName} executed.');
 }
 `;
 
-// 4. Tulis file
-try {
-  fs.writeFileSync(filePath, seederTemplate, 'utf8');
-  console.log('\x1b[32m%s\x1b[0m', `✅ Seeder created successfully!`);
-  console.log(`📄 Path: database/seeders/${fileName}`);
-} catch (error) {
-  console.error('\x1b[31m%s\x1b[0m', '❌ Gagal membuat file seeder:', error.message);
+  // 3. Tulis file
+  try {
+    fs.writeFileSync(filePath, seederTemplate, 'utf8');
+    console.log('\x1b[32m%s\x1b[0m', `✅ Seeder created successfully!`);
+    console.log(`📄 Path: database/seeders/${fileName}`);
+  } catch (error) {
+    console.error('\x1b[31m%s\x1b[0m', '❌ Gagal membuat file seeder:', error.message);
+  }
 }
+
+main();

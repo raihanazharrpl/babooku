@@ -49,12 +49,15 @@
     "#resources/*": "./resources/*"
   },
   "dependencies": {
+    "@google/genai": "^2.18.0",
     "@supabase/supabase-js": "^2.112.2",
     "bcryptjs": "^3.0.3",
+    "busboy": "^1.6.0",
     "cors": "^2.8.6",
     "eruda": "^3.4.3",
     "express": "^5.2.1",
     "framer-motion": "^13.1.0",
+    "inquirer": "^14.1.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.300.0",
     "mysql2": "^3.23.2",
