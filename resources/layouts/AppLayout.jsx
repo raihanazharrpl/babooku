@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import NavbarPrimary from './part/NavbarPrimary'
-import Sidebar from './part/Sidebar'
+import SidebarPrimary from './part/SidebarPrimary' // <-- Diperbarui di sini
 import FooterPrimary from './part/FooterPrimary'
 
 export default function AppLayout() {
@@ -18,10 +18,10 @@ export default function AppLayout() {
 
       {/* Container Utama */}
       <div className="flex-1 flex w-full relative">
-        {/* Sidebar hanya ada & aktif di mode Mobile */}
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        {/* SidebarPrimary hanya ada & aktif di mode Mobile */}
+        <SidebarPrimary isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} /> {/* <-- Diperbarui di sini */}
 
-        {/* Main Content Meluas Penuh (Tanpa Sidebar di Mode Desktop) */}
+        {/* Main Content Meluas Penuh */}
         <main className="flex-1 min-w-0 w-full overflow-x-hidden">
           <Outlet />
         </main>

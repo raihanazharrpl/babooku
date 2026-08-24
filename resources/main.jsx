@@ -1,12 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import eruda from 'eruda'
-import AppRoutes from '../routes/web'
+// import eruda from 'eruda'
+import AppRoutes from '@/routes/AppRoutes'
 import './css/style.css'
 
 // Inisialisasi Eruda
-eruda.init()
+// eruda.init()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
