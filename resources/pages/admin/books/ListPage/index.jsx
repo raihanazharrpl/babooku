@@ -26,7 +26,6 @@ export default function BookListPage() {
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   
-  // STATE BARU: Tambah subcategory_id
   const [formData, setFormData] = useState({
     title: '',
     author: '',

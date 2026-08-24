@@ -11,12 +11,12 @@ export default async function uploadHandler(req, res) {
     let fileBuffer = [];
     let mimeType = '';
     let categoryFolder = 'general';
-    let subcategoryFolder = ''; // <-- TAMBAHAN FIELD SUBFOLDER
+    let subcategoryFolder = ''; 
     let bookTitle = 'book';
 
     bb.on('field', (name, val) => {
       if (name === 'categoryFolder') categoryFolder = val;
-      if (name === 'subcategoryFolder') subcategoryFolder = val; // <-- TANGKAP SUBFOLDER
+      if (name === 'subcategoryFolder') subcategoryFolder = val;
       if (name === 'bookTitle') bookTitle = val;
     });
 

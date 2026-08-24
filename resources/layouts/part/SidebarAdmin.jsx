@@ -7,7 +7,8 @@ import {
   ShoppingCart, Users, ChevronDown, LogOut, 
   Settings, ArrowLeft, Layers, Image as ImageIcon,
   BarChart3, PieChart, TrendingUp, UserCheck, PackageCheck,
-  ShieldCheck, X
+  ShieldCheck, X, Wrench, Calculator, Binary, FileText,
+  History
 } from 'lucide-react';
 import { getAssetUrl } from '@/resources/helpers/assetsHelper.js';
 
@@ -34,59 +35,77 @@ export default function SidebarAdmin({ isOpen, onClose, isCollapsed }) {
     navigate('/auth/login');
   };
 
-  const menuGroups = [
-    {
-      groupLabel: 'Utama',
-      items: [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard }
-      ]
-    },
-    {
-      groupLabel: 'Laporan & Analis',
-      items: [
-        {
-          name: 'Statistik & Analis',
-          icon: BarChart3,
-          submenuKey: 'analytics',
-          submenus: [
-            { name: 'Ringkasan Utama', path: '/admin/analytics/summary', icon: PieChart },
-            { name: 'Laporan Penjualan', path: '/admin/analytics/sales', icon: TrendingUp },
-            { name: 'Laporan Pengguna', path: '/admin/analytics/users', icon: UserCheck },
-            { name: 'Laporan Perputaran Stok', path: '/admin/analytics/stock', icon: PackageCheck },
-          ]
-        }
-      ]
-    },
-    {
-      groupLabel: 'Inventaris',
-      items: [
-        {
-          name: 'Katalog Buku',
-          icon: Layers,
-          submenuKey: 'catalog',
-          submenus: [
-            { name: 'Daftar Buku', path: '/admin/books/list', icon: BookOpen },
-            { name: 'Kategori Buku', path: '/admin/books/category', icon: FolderTree },
-            { name: 'Tag / Label', path: '/admin/books/tag', icon: Tags },
-          ]
-        }
-      ]
-    },
-    {
-      groupLabel: 'Transaksi',
-      items: [
-        { name: 'Pesanan Masuk', path: '/admin/orders', icon: ShoppingCart, badge: '12' },
-        { name: 'Pelanggan', path: '/admin/customers', icon: Users },
-        { name: 'Banner & Hero', path: '/admin/banners', icon: ImageIcon }
-      ]
-    },
-    {
-      groupLabel: 'Sistem',
-      items: [
-        { name: 'Pengaturan Toko', path: '/admin/settings', icon: Settings }
-      ]
-    }
-  ];
+const menuGroups = [
+  {
+    groupLabel: 'Utama',
+    items: [
+      { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard }
+    ]
+  },
+  {
+    groupLabel: 'Laporan & Analis',
+    items: [
+      {
+        name: 'Statistik & Analis',
+        icon: BarChart3,
+        submenuKey: 'analytics',
+        submenus: [
+          { name: 'Ringkasan Utama', path: '/admin/analytics/summary', icon: PieChart },
+          { name: 'Laporan Penjualan', path: '/admin/analytics/sales', icon: TrendingUp },
+          { name: 'Laporan Pengguna', path: '/admin/analytics/users', icon: UserCheck },
+          { name: 'Laporan Perputaran Stok', path: '/admin/analytics/stock', icon: PackageCheck },
+        ]
+      }
+    ]
+  },
+  {
+    groupLabel: 'Inventaris',
+    items: [
+      {
+        name: 'Katalog Buku',
+        icon: Layers,
+        submenuKey: 'catalog',
+        submenus: [
+          { name: 'Daftar Buku', path: '/admin/books/list', icon: BookOpen },
+          { name: 'Kategori Buku', path: '/admin/books/category', icon: FolderTree },
+          { name: 'Tag / Label', path: '/admin/books/tag', icon: Tags },
+        ]
+      }
+    ]
+  },
+  {
+    groupLabel: 'Transaksi',
+    items: [
+      { name: 'Pesanan Masuk', path: '/admin/orders', icon: ShoppingCart, badge: '12' },
+      { name: 'Pelanggan', path: '/admin/customers', icon: Users },
+      { name: 'Banner & Hero', path: '/admin/banners', icon: ImageIcon }
+    ]
+  },
+  {
+    groupLabel: 'Alat & Utility', // GROUPS BARU: TOOLS
+    items: [
+      {
+        name: 'Tools Admin',
+        icon: Wrench,
+        submenuKey: 'tools',
+        submenus: [
+          { name: 'Kalkulator', path: '/admin/tools/calculator', icon: Calculator },
+          { name: 'Biner / Format Converter', path: '/admin/tools/converter', icon: Binary },
+          { name: 'Generator / PDF Tools', path: '/admin/tools/generator', icon: FileText },
+        ]
+      }
+    ]
+  },
+  {
+    groupLabel: 'Sistem & Keamanan', // GROUPS DIPERBARUI: MANAJEMEN ADMIN & LOG
+    items: [
+      { name: 'Kelola Admin', path: '/admin/users/admins', icon: ShieldCheck },
+      { name: 'Log Aktivitas', path: '/admin/system/logs', icon: History },
+      { name: 'Pengaturan Toko', path: '/admin/settings', icon: Settings }
+    ]
+  }
+];
+
 
   return (
     <>

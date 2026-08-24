@@ -1,0 +1,12 @@
+-- Migration (PostgreSQL / Supabase): create_mail_table
+-- Created at: 2026-08-24T23:19:49.269Z
+
+CREATE TABLE IF NOT EXISTS example (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable RLS 
+ALTER TABLE example ENABLE ROW LEVEL SECURITY;
+
