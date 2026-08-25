@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import ScrollToTop from './components/Helper/ScrollToTop.jsx'
 // import eruda from 'eruda'
 import AppRoutes from '@/routes/AppRoutes'
 import './css/style.css'
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         v7_relativeSplatPath: true,
       }}
     >
+      <ScrollToTop />
       <AppRoutes />
     </BrowserRouter>
   </React.StrictMode>

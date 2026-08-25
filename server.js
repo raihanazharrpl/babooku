@@ -14,6 +14,9 @@ import tagsHandler from './routes/api/tags.js'; // <-- Tambahkan ini
 import discountsHandler from './routes/api/discounts.js'; // <-- Tambahkan ini
 import bookLikesHandler from './routes/api/bookLikes.js'; // Impor di bagian atas
 import publishersHandler from './routes/api/publishers.js'; // Impor di bagian atas
+import landingHandler from './app/Controllers/landing.controller.js';
+
+// Daftarkan di bagian API:
 
 // Tambahkan di bagian daftarkan Endpoint API:
 
@@ -36,6 +39,7 @@ app.all('/api/discounts', (req, res) => discountsHandler(req, res));
 app.all('/api/books/likes', (req, res) => bookLikesHandler(req, res));
 app.all('/api/publishers', (req, res) => publishersHandler(req, res));
 
+app.all('/api/landing', (req, res) => landingHandler(req, res));
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

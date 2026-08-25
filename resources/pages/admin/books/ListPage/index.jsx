@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, Search, Filter, Edit2, Trash2, 
-  BookOpen, X, Upload, Loader2, Image as ImageIcon, Sparkles 
+  BookOpen, X, Upload, Loader2, Sparkles, Book, Smartphone, Headphones
 } from 'lucide-react';
 import { getCoverUrl } from '#resources/helpers/assetsHelper.js';
 import { formatRupiah, parsePrice } from '#resources/helpers/priceHelper.js';
@@ -10,7 +10,7 @@ import { formatRupiah, parsePrice } from '#resources/helpers/priceHelper.js';
 export default function BookListPage() {
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [publishers, setPublishers] = useState([]); // State Penerbit dari DB
+  const [publishers, setPublishers] = useState([]);
   const [isFetching, setIsFetching] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,11 +26,14 @@ export default function BookListPage() {
   const fileInputRef = useRef(null);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
+
+  const fileAssetRef = useRef(null);
+  const [assetFile, setAssetFile] = useState(null);
   
   const [formData, setFormData] = useState({
     title: '',
     author: '',
-    publisher: 'Unknown', // Default ke Unknown
+    publisher_id: '',
     category_id: '',
     subcategory_id: '',
     description: '',
@@ -38,7 +41,10 @@ export default function BookListPage() {
     price: '',
     stock: '',
     status: 'active',
-    cover_image: ''
+    cover_image: '',
+    format: ['physical'],
+    weight: 300,
+    file_url: ''
   });
 
   useEffect(() => {
@@ -73,7 +79,7 @@ export default function BookListPage() {
     setFormData({
       title: '',
       author: '',
-      publisher: 'Unknown',
+      publisher_id: '',
       category_id: '',
       subcategory_id: '',
       description: '',
@@ -81,10 +87,14 @@ export default function BookListPage() {
       price: '',
       stock: '',
       status: 'active',
-      cover_image: ''
+      cover_image: '',
+      format: ['physical'],
+      weight: 300,
+      file_url: ''
     });
     setCoverFile(null);
     setCoverPreview('');
+    setAssetFile(null);
     setIsAddModalOpen(true);
   };
 
@@ -93,7 +103,7 @@ export default function BookListPage() {
     setFormData({
       title: book.title || '',
       author: book.author || '',
-      publisher: book.publisher || 'Unknown',
+      publisher_id: book.publisher_id || '',
       category_id: book.category_id || '',
       subcategory_id: book.subcategory_id || '',
       description: book.description || '',
@@ -101,10 +111,14 @@ export default function BookListPage() {
       price: book.price ? String(Math.floor(Number(book.price))) : '',
       stock: book.stock || 0,
       status: book.status || 'active',
-      cover_image: book.cover_image || ''
+      cover_image: book.cover_image || '',
+      format: Array.isArray(book.format) ? book.format : ['physical'],
+      weight: book.weight || 300,
+      file_url: book.file_url || ''
     });
     setCoverFile(null);
     setCoverPreview(book.cover_image ? getCoverUrl(book.cover_image) : '');
+    setAssetFile(null);
     setIsEditModalOpen(true);
   };
 
@@ -113,12 +127,27 @@ export default function BookListPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, type) => {
     const file = e.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    if (type === 'cover') {
       setCoverFile(file);
       setCoverPreview(URL.createObjectURL(file));
+    } else if (type === 'asset') {
+      setAssetFile(file);
     }
+  };
+
+  const toggleFormat = (fmt) => {
+    setFormData(prev => {
+      const current = prev.format;
+      if (current.includes(fmt)) {
+        if (current.length === 1) return prev; 
+        return { ...prev, format: current.filter(f => f !== fmt) };
+      }
+      return { ...prev, format: [...current, fmt] };
+    });
   };
 
   const handleGenerateKeywords = async () => {
@@ -150,7 +179,7 @@ export default function BookListPage() {
     }
   };
 
-  const uploadCoverFile = async (file, categoryId, subcategoryId, title) => {
+  const uploadFileAPI = async (file, title, folderType, categoryId, subcategoryId) => {
     const categoryObj = categories.find(c => String(c.id) === String(categoryId));
     const categoryFolder = categoryObj?.slug || 'general';
 
@@ -161,6 +190,7 @@ export default function BookListPage() {
     uploadData.append('file', file);
     uploadData.append('categoryFolder', categoryFolder);
     uploadData.append('subcategoryFolder', subcategoryFolder);
+    uploadData.append('folderType', folderType);
     uploadData.append('bookTitle', title);
 
     const res = await fetch('/api/upload', {
@@ -168,7 +198,7 @@ export default function BookListPage() {
       body: uploadData
     });
     const json = await res.json();
-    if (!json.success) throw new Error(json.message || 'Gagal mengunggah file cover.');
+    if (!json.success) throw new Error(json.message || `Gagal mengunggah file ${folderType}.`);
     return json.filePath;
   };
 
@@ -178,11 +208,24 @@ export default function BookListPage() {
     try {
       let finalCoverPath = formData.cover_image;
       if (coverFile) {
-        finalCoverPath = await uploadCoverFile(
+        finalCoverPath = await uploadFileAPI(
           coverFile, 
+          formData.title,
+          'covers',
           formData.category_id, 
-          formData.subcategory_id, 
-          formData.title
+          formData.subcategory_id
+        );
+      }
+
+      let finalAssetPath = formData.file_url;
+      if (assetFile) {
+        const fType = formData.format.includes('ebook') ? 'ebooks' : 'audiobooks';
+        finalAssetPath = await uploadFileAPI(
+          assetFile, 
+          formData.title, 
+          fType,
+          formData.category_id,
+          formData.subcategory_id
         );
       }
 
@@ -190,9 +233,12 @@ export default function BookListPage() {
         ...formData,
         category_id: parseInt(formData.category_id, 10),
         subcategory_id: formData.subcategory_id ? parseInt(formData.subcategory_id, 10) : null,
+        publisher_id: formData.publisher_id ? parseInt(formData.publisher_id, 10) : null,
         price: parsePrice(formData.price),
         stock: parseInt(formData.stock, 10) || 0,
-        cover_image: finalCoverPath
+        weight: formData.format.includes('physical') ? parseInt(formData.weight, 10) : null,
+        cover_image: finalCoverPath,
+        file_url: (formData.format.includes('ebook') || formData.format.includes('audiobook')) ? finalAssetPath : null
       };
 
       const url = isEditModalOpen ? `/api/books?id=${selectedBook.id}` : '/api/books';
@@ -241,7 +287,7 @@ export default function BookListPage() {
   const filteredBooks = books.filter(b => {
     const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           b.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (b.publisher && b.publisher.toLowerCase().includes(searchTerm.toLowerCase()));
+                          (b.publisher_name && b.publisher_name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'All' || String(b.category_id) === String(selectedCategory);
     return matchesSearch && matchesCategory;
   });
@@ -282,7 +328,7 @@ export default function BookListPage() {
               <tr className="bg-merino-50/70 text-venice-blue-700 text-xs font-bold border-b border-merino-200">
                 <th className="py-4 px-6">Buku</th>
                 <th className="py-4 px-4">Penerbit</th>
-                <th className="py-4 px-4">Kategori</th>
+                <th className="py-4 px-4">Format</th>
                 <th className="py-4 px-4">Harga</th>
                 <th className="py-4 px-4">Stok</th>
                 <th className="py-4 px-4">Status</th>
@@ -309,11 +355,16 @@ export default function BookListPage() {
                       </div>
                     </td>
                     <td className="py-4 px-4 font-semibold text-venice-blue-800">
-                      {book.publisher || 'Unknown'}
+                      {book.publisher_name || 'Self-Published / Indie'}
                     </td>
-                    <td className="py-4 px-4 font-semibold text-venice-blue-800">
-                      {book.category_name || '-'}
-                      {book.subcategory_name && <span className="block text-[10px] text-venice-blue-500 font-medium">{book.subcategory_name}</span>}
+                    <td className="py-4 px-4">
+                      <div className="flex gap-1.5 flex-wrap">
+                        {(book.format || ['physical']).map((fmt) => (
+                          <span key={fmt} className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-merino-100 text-venice-blue-900 border border-merino-300">
+                            {fmt === 'physical' ? 'Fisik' : fmt === 'ebook' ? 'E-Book' : 'Audio'}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="py-4 px-4 font-extrabold text-venice-blue-900">{formatRupiah(book.price)}</td>
                     <td className="py-4 px-4 font-bold">{book.stock} pcs</td>
@@ -338,40 +389,39 @@ export default function BookListPage() {
 
       {(isAddModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 z-50 bg-venice-blue-950/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-merino-200 animate-in fade-in zoom-in-95 my-8">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-merino-200 animate-in fade-in zoom-in-95 my-8">
             <div className="flex justify-between items-center border-b border-merino-200 pb-3">
               <h3 className="text-lg font-black text-venice-blue-900">{isEditModalOpen ? 'Edit Data Buku' : 'Tambah Buku Baru'}</h3>
               <button onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="p-1 rounded-xl text-venice-blue-700 hover:bg-merino-100"><X className="w-5 h-5" /></button>
             </div>
 
-            <form onSubmit={handleSubmitForm} className="space-y-4 text-xs font-semibold max-h-[70vh] overflow-y-auto pr-1">
+            <form onSubmit={handleSubmitForm} className="space-y-4 text-xs font-semibold max-h-[75vh] overflow-y-auto pr-1">
               <div>
                 <label className="block text-venice-blue-800 mb-1">Judul Buku</label>
                 <input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Masukkan judul buku" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-venice-blue-800 mb-1">Penulis</label>
                   <input type="text" required value={formData.author} onChange={(e) => setFormData({ ...formData, author: e.target.value })} placeholder="Nama penulis" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
                 </div>
                 <div>
                   <label className="block text-venice-blue-800 mb-1">Penerbit</label>
-                  {/* DROPDOWN PENERBIT DENGAN OPTION UNKNOWN */}
                   <select 
-                    value={formData.publisher} 
-                    onChange={(e) => setFormData({ ...formData, publisher: e.target.value })} 
+                    value={formData.publisher_id} 
+                    onChange={(e) => setFormData({ ...formData, publisher_id: e.target.value })} 
                     className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700 font-semibold"
                   >
+                    <option value="">Self-Published / Indie</option>
                     {publishers.map((pub) => (
-                      <option key={pub.id} value={pub.name}>{pub.name}</option>
+                      <option key={pub.id} value={pub.id}>{pub.name} {pub.is_official ? '✓' : ''}</option>
                     ))}
-                    <option value="Unknown">Unknown / Lainnya</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-venice-blue-800 mb-1">Kategori Utama</label>
                   <select 
@@ -417,15 +467,55 @@ export default function BookListPage() {
                 <input type="text" value={formData.keywords} onChange={(e) => setFormData({ ...formData, keywords: e.target.value })} placeholder="Dipisahkan koma" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-venice-blue-800 mb-1">Harga (Rp)</label>
-                  <input type="text" required value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} placeholder="Contoh: 95000" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+              <div className="bg-merino-50 p-4 rounded-xl border border-merino-200 space-y-4">
+                <label className="block text-venice-blue-900 font-bold text-sm">Format & Ketersediaan Buku</label>
+                
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => toggleFormat('physical')} className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${formData.format.includes('physical') ? 'border-venice-blue-700 bg-venice-blue-50 text-venice-blue-900 shadow-sm font-bold' : 'border-merino-300 bg-white text-venice-blue-600/70 hover:bg-merino-100'}`}>
+                    <Book className="w-5 h-5 mb-1" /> Fisik Cetak
+                  </button>
+                  <button type="button" onClick={() => toggleFormat('ebook')} className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${formData.format.includes('ebook') ? 'border-amber-500 bg-amber-50 text-amber-900 shadow-sm font-bold' : 'border-merino-300 bg-white text-venice-blue-600/70 hover:bg-merino-100'}`}>
+                    <Smartphone className="w-5 h-5 mb-1" /> E-Book
+                  </button>
+                  <button type="button" onClick={() => toggleFormat('audiobook')} className={`flex-1 flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${formData.format.includes('audiobook') ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm font-bold' : 'border-merino-300 bg-white text-venice-blue-600/70 hover:bg-merino-100'}`}>
+                    <Headphones className="w-5 h-5 mb-1" /> Audiobook
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-venice-blue-800 mb-1">Jumlah Stok</label>
-                  <input type="number" required value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} placeholder="0" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-venice-blue-800 mb-1">Harga Retail (Rp)</label>
+                    <input type="text" required value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} placeholder="Contoh: 95000" className="w-full px-3.5 py-2.5 bg-white border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+                  </div>
+                  {formData.format.includes('physical') && (
+                    <>
+                      <div>
+                        <label className="block text-venice-blue-800 mb-1">Stok Fisik</label>
+                        <input type="number" required value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} placeholder="0" className="w-full px-3.5 py-2.5 bg-white border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-venice-blue-800 mb-1">Berat Fisik (Gram)</label>
+                        <input type="number" required value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} placeholder="300" className="w-full px-3.5 py-2.5 bg-white border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+                      </div>
+                    </>
+                  )}
                 </div>
+
+                {(formData.format.includes('ebook') || formData.format.includes('audiobook')) && (
+                   <div className="pt-3 border-t border-merino-200">
+                     <label className="block text-venice-blue-900 font-bold mb-2">Upload Aset Digital (PDF/EPUB/MP3)</label>
+                     <input type="file" ref={fileAssetRef} onChange={(e) => handleFileChange(e, 'asset')} accept=".pdf,.epub,.mp3" className="hidden" />
+                     
+                     <div className="flex items-center gap-3">
+                       <button type="button" onClick={() => fileAssetRef.current?.click()} className="px-4 py-2 bg-merino-200 hover:bg-merino-300 text-venice-blue-900 rounded-xl font-bold flex items-center gap-2">
+                         <Upload className="w-4 h-4" /> {assetFile ? 'Ganti File' : 'Pilih File Aset'}
+                       </button>
+                       <span className="text-venice-blue-600 truncate max-w-[220px]">
+                         {assetFile ? assetFile.name : (formData.file_url ? 'Aset tersimpan di cloud' : 'Belum ada file dipilih')}
+                       </span>
+                     </div>
+                   </div>
+                )}
               </div>
 
               <div>
@@ -439,12 +529,12 @@ export default function BookListPage() {
 
               <div>
                 <label className="block text-venice-blue-800 mb-1">Cover Sampul</label>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/webp" className="hidden" />
-                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-merino-300 rounded-2xl p-4 text-center bg-merino-50/50 hover:bg-merino-50 cursor-pointer transition-colors flex flex-col items-center justify-center min-h-[100px]">
+                <input type="file" ref={fileInputRef} onChange={(e) => handleFileChange(e, 'cover')} accept="image/png, image/jpeg, image/webp" className="hidden" />
+                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-merino-300 rounded-2xl p-4 text-center bg-merino-50 hover:bg-merino-100 cursor-pointer transition-colors flex flex-col items-center justify-center min-h-[120px]">
                   {coverPreview ? (
-                    <img src={coverPreview} alt="Preview" className="h-24 w-16 object-cover rounded-md shadow-md" />
+                    <img src={coverPreview} alt="Preview" className="h-28 w-20 object-cover rounded-md shadow-md" />
                   ) : (
-                    <><Upload className="w-6 h-6 text-venice-blue-700 mb-1" /><p className="text-venice-blue-800">Klik unggah sampul</p></>
+                    <><Upload className="w-6 h-6 text-venice-blue-700 mb-1" /><p className="text-venice-blue-800 font-bold">Unggah Gambar Sampul</p></>
                   )}
                 </div>
               </div>

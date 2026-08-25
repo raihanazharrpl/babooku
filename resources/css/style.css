@@ -45,6 +45,10 @@
   --color-venice-blue-950: #0D283A;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Sembunyikan scrollbar untuk Chrome, Safari dan Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
