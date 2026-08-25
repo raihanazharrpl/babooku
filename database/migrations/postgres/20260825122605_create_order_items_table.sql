@@ -1,5 +1,5 @@
 -- Migration (PostgreSQL / Supabase): create_orders_items_table
--- Created at: 2026-08-24T18:07:27.459Z
+-- Created at: 2026-08-25T05:26:05.559Z
 
 CREATE TABLE IF NOT EXISTS order_items (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

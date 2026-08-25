@@ -8,7 +8,7 @@ import {
   Settings, ArrowLeft, Layers, Image as ImageIcon,
   BarChart3, PieChart, TrendingUp, UserCheck, PackageCheck,
   ShieldCheck, X, Wrench, Calculator, Binary, FileText,
-  History
+  History, Building2
 } from 'lucide-react';
 import { getAssetUrl } from '@/resources/helpers/assetsHelper.js';
 
@@ -69,6 +69,7 @@ const menuGroups = [
           { name: 'Daftar Buku', path: '/admin/books/list', icon: BookOpen },
           { name: 'Kategori Buku', path: '/admin/books/category', icon: FolderTree },
           { name: 'Tag / Label', path: '/admin/books/tag', icon: Tags },
+          { name: 'Penerbit Buku', path: '/admin/books/publishers', icon: Building2 }, // <-- TAMBAHAN DI SINI
         ]
       }
     ]

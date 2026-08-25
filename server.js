@@ -10,7 +10,12 @@ import booksHandler from './routes/api/books.js';
 import categoriesHandler from './routes/api/categories.js';
 import uploadHandler from './routes/api/upload.js'; // <-- TAMBAHKAN INI
 import generateKeywordsHandler from './routes/api/generateKeywords.js';
-// ...
+import tagsHandler from './routes/api/tags.js'; // <-- Tambahkan ini
+import discountsHandler from './routes/api/discounts.js'; // <-- Tambahkan ini
+import bookLikesHandler from './routes/api/bookLikes.js'; // Impor di bagian atas
+import publishersHandler from './routes/api/publishers.js'; // Impor di bagian atas
+
+// Tambahkan di bagian daftarkan Endpoint API:
 
 dotenv.config();
 
@@ -26,6 +31,10 @@ app.all('/api/books', (req, res) => booksHandler(req, res));
 app.all('/api/categories', (req, res) => categoriesHandler(req, res));
 app.all('/api/upload', (req, res) => uploadHandler(req, res)); // <-- TAMBAHKAN INI
 app.all('/api/generate-keywords', (req, res) => generateKeywordsHandler(req, res));
+app.all('/api/tags', (req, res) => tagsHandler(req, res)); // <-- Tambahkan ini
+app.all('/api/discounts', (req, res) => discountsHandler(req, res));
+app.all('/api/books/likes', (req, res) => bookLikesHandler(req, res));
+app.all('/api/publishers', (req, res) => publishersHandler(req, res));
 
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3000;

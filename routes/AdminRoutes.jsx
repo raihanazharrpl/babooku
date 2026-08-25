@@ -18,6 +18,8 @@ import SettingPage from '@/resources/pages/admin/SettingPage/index.jsx';
 import BookListPage from '@/resources/pages/admin/books/ListPage/index.jsx';
 import BookCategoryPage from '@/resources/pages/admin/books/CategoryPage/index.jsx';
 import BookTagPage from '@/resources/pages/admin/books/TagPage/index.jsx';
+// Tambahkan import komponen
+import PublisherPage from '@/resources/pages/admin/books/PublisherPage/index.jsx';
 
 // Import Submenu Analytics
 import SummaryPage from '@/resources/pages/admin/analytics/SummaryPage/index.jsx';
@@ -38,6 +40,7 @@ export default function AdminRoutes() {
           <Route path="list" element={<BookListPage />} />
           <Route path="category" element={<BookCategoryPage />} />
           <Route path="tag" element={<BookTagPage />} />
+          <Route path="publishers" element={<PublisherPage />} />
         </Route>
 
         <Route path="orders" element={<OrdersPage />} />

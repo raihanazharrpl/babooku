@@ -5,11 +5,12 @@ import {
   BookOpen, X, Upload, Loader2, Image as ImageIcon, Sparkles 
 } from 'lucide-react';
 import { getCoverUrl } from '#resources/helpers/assetsHelper.js';
-import { formatRupiah } from '#resources/helpers/priceHelper.js';
+import { formatRupiah, parsePrice } from '#resources/helpers/priceHelper.js';
 
 export default function BookListPage() {
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [publishers, setPublishers] = useState([]); // State Penerbit dari DB
   const [isFetching, setIsFetching] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +30,7 @@ export default function BookListPage() {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
+    publisher: 'Unknown', // Default ke Unknown
     category_id: '',
     subcategory_id: '',
     description: '',
@@ -46,19 +48,19 @@ export default function BookListPage() {
   const fetchInitialData = async () => {
     setIsFetching(true);
     try {
-      const [resBooks, resCategories] = await Promise.all([
+      const [resBooks, resCategories, resPublishers] = await Promise.all([
         fetch('/api/books'),
-        fetch('/api/categories')
+        fetch('/api/categories'),
+        fetch('/api/publishers')
       ]);
 
       const jsonBooks = await resBooks.json();
       const jsonCategories = await resCategories.json();
+      const jsonPublishers = await resPublishers.json();
 
       if (jsonBooks.success) setBooks(jsonBooks.data || []);
-      if (jsonCategories.success) {
-        const catData = jsonCategories.data || [];
-        setCategories(catData);
-      }
+      if (jsonCategories.success) setCategories(jsonCategories.data || []);
+      if (jsonPublishers.success) setPublishers(jsonPublishers.data || []);
     } catch (error) {
       console.error('Error fetching data from DB:', error);
     } finally {
@@ -71,6 +73,7 @@ export default function BookListPage() {
     setFormData({
       title: '',
       author: '',
+      publisher: 'Unknown',
       category_id: '',
       subcategory_id: '',
       description: '',
@@ -90,11 +93,12 @@ export default function BookListPage() {
     setFormData({
       title: book.title || '',
       author: book.author || '',
+      publisher: book.publisher || 'Unknown',
       category_id: book.category_id || '',
       subcategory_id: book.subcategory_id || '',
       description: book.description || '',
       keywords: book.keywords || '',
-      price: book.price ? String(Math.floor(Number(book.price))) : '', // Mengubah 95000.00 menjadi "95000"
+      price: book.price ? String(Math.floor(Number(book.price))) : '',
       stock: book.stock || 0,
       status: book.status || 'active',
       cover_image: book.cover_image || ''
@@ -146,12 +150,17 @@ export default function BookListPage() {
     }
   };
 
-  const uploadCoverFile = async (file, categoryId, title) => {
+  const uploadCoverFile = async (file, categoryId, subcategoryId, title) => {
     const categoryObj = categories.find(c => String(c.id) === String(categoryId));
     const categoryFolder = categoryObj?.slug || 'general';
+
+    const subcategoryObj = categoryObj?.subcategories?.find(s => String(s.id) === String(subcategoryId));
+    const subcategoryFolder = subcategoryObj?.slug || '';
+
     const uploadData = new FormData();
     uploadData.append('file', file);
     uploadData.append('categoryFolder', categoryFolder);
+    uploadData.append('subcategoryFolder', subcategoryFolder);
     uploadData.append('bookTitle', title);
 
     const res = await fetch('/api/upload', {
@@ -169,14 +178,20 @@ export default function BookListPage() {
     try {
       let finalCoverPath = formData.cover_image;
       if (coverFile) {
-        finalCoverPath = await uploadCoverFile(coverFile, formData.category_id, formData.title);
+        finalCoverPath = await uploadCoverFile(
+          coverFile, 
+          formData.category_id, 
+          formData.subcategory_id, 
+          formData.title
+        );
       }
 
-      // Pastikan subcategory_id dikirim sebagai null jika tidak dipilih
       const payload = {
         ...formData,
         category_id: parseInt(formData.category_id, 10),
         subcategory_id: formData.subcategory_id ? parseInt(formData.subcategory_id, 10) : null,
+        price: parsePrice(formData.price),
+        stock: parseInt(formData.stock, 10) || 0,
         cover_image: finalCoverPath
       };
 
@@ -225,19 +240,17 @@ export default function BookListPage() {
 
   const filteredBooks = books.filter(b => {
     const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          b.author.toLowerCase().includes(searchTerm.toLowerCase());
+                          b.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (b.publisher && b.publisher.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'All' || String(b.category_id) === String(selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
-  // LOGIKA SUB-KATEGORI
   const selectedCategoryObj = categories.find(c => String(c.id) === String(formData.category_id));
   const availableSubcategories = selectedCategoryObj?.subcategories || [];
 
   return (
     <div className="w-full min-h-screen bg-merino-50 font-sans text-venice-blue-950 px-6 sm:px-12 md:px-20 py-8 space-y-6">
-      
-      {/* HEADER & PENCARIAN (Tetap Sama) */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-venice-blue-900">Kelola Daftar Buku</h1>
@@ -248,11 +261,10 @@ export default function BookListPage() {
         </button>
       </div>
 
-      {/* FILTER TABEL */}
       <div className="bg-white p-4 rounded-2xl border border-merino-300/70 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-venice-blue-600/70" />
-          <input type="text" placeholder="Cari judul atau penulis..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-merino-50 border border-merino-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-venice-blue-700 transition-colors" />
+          <input type="text" placeholder="Cari judul, penulis, penerbit..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-merino-50 border border-merino-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-venice-blue-700 transition-colors" />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Filter className="w-4 h-4 text-venice-blue-700 shrink-0" />
@@ -263,13 +275,13 @@ export default function BookListPage() {
         </div>
       </div>
 
-      {/* TABEL BUKU */}
       <div className="bg-white rounded-3xl border border-merino-300/70 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-merino-50/70 text-venice-blue-700 text-xs font-bold border-b border-merino-200">
                 <th className="py-4 px-6">Buku</th>
+                <th className="py-4 px-4">Penerbit</th>
                 <th className="py-4 px-4">Kategori</th>
                 <th className="py-4 px-4">Harga</th>
                 <th className="py-4 px-4">Stok</th>
@@ -279,9 +291,9 @@ export default function BookListPage() {
             </thead>
             <tbody className="text-xs divide-y divide-merino-100">
               {isFetching ? (
-                <tr><td colSpan="6" className="py-12 text-center text-venice-blue-600"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />Memuat data...</td></tr>
+                <tr><td colSpan="7" className="py-12 text-center text-venice-blue-600"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />Memuat data...</td></tr>
               ) : filteredBooks.length === 0 ? (
-                <tr><td colSpan="6" className="py-12 text-center text-venice-blue-600 font-semibold">Belum ada data buku ditemukan.</td></tr>
+                <tr><td colSpan="7" className="py-12 text-center text-venice-blue-600 font-semibold">Belum ada data buku ditemukan.</td></tr>
               ) : (
                 filteredBooks.map((book) => (
                   <tr key={book.id} className="hover:bg-merino-50/50 transition-colors">
@@ -295,6 +307,9 @@ export default function BookListPage() {
                           <p className="text-venice-blue-600">{book.author}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="py-4 px-4 font-semibold text-venice-blue-800">
+                      {book.publisher || 'Unknown'}
                     </td>
                     <td className="py-4 px-4 font-semibold text-venice-blue-800">
                       {book.category_name || '-'}
@@ -321,7 +336,6 @@ export default function BookListPage() {
         </div>
       </div>
 
-      {/* MODAL TAMBAH / EDIT */}
       {(isAddModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 z-50 bg-venice-blue-950/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-merino-200 animate-in fade-in zoom-in-95 my-8">
@@ -335,20 +349,35 @@ export default function BookListPage() {
                 <label className="block text-venice-blue-800 mb-1">Judul Buku</label>
                 <input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Masukkan judul buku" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
               </div>
-              
-              <div>
-                <label className="block text-venice-blue-800 mb-1">Penulis</label>
-                <input type="text" required value={formData.author} onChange={(e) => setFormData({ ...formData, author: e.target.value })} placeholder="Nama penulis" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-venice-blue-800 mb-1">Penulis</label>
+                  <input type="text" required value={formData.author} onChange={(e) => setFormData({ ...formData, author: e.target.value })} placeholder="Nama penulis" className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700" />
+                </div>
+                <div>
+                  <label className="block text-venice-blue-800 mb-1">Penerbit</label>
+                  {/* DROPDOWN PENERBIT DENGAN OPTION UNKNOWN */}
+                  <select 
+                    value={formData.publisher} 
+                    onChange={(e) => setFormData({ ...formData, publisher: e.target.value })} 
+                    className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700 font-semibold"
+                  >
+                    {publishers.map((pub) => (
+                      <option key={pub.id} value={pub.name}>{pub.name}</option>
+                    ))}
+                    <option value="Unknown">Unknown / Lainnya</option>
+                  </select>
+                </div>
               </div>
 
-              {/* GRID KATEGORI & SUB KATEGORI */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-venice-blue-800 mb-1">Kategori Utama</label>
                   <select 
                     required
                     value={formData.category_id}
-                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value, subcategory_id: '' })} // Reset sub kategori saat kategori utama berubah
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value, subcategory_id: '' })}
                     className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700"
                   >
                     <option value="" disabled>Pilih Kategori</option>
@@ -362,7 +391,7 @@ export default function BookListPage() {
                   <select 
                     value={formData.subcategory_id}
                     onChange={(e) => setFormData({ ...formData, subcategory_id: e.target.value })}
-                    disabled={!formData.category_id || availableSubcategories.length === 0} // Disable jika belum pilih kategori
+                    disabled={!formData.category_id || availableSubcategories.length === 0}
                     className="w-full px-3.5 py-2.5 bg-merino-50 border border-merino-300 rounded-xl focus:outline-none focus:border-venice-blue-700 disabled:opacity-50 disabled:bg-merino-200"
                   >
                     <option value="">{availableSubcategories.length === 0 && formData.category_id ? 'Tidak ada sub' : 'Pilih Sub (Opsional)'}</option>
@@ -431,7 +460,6 @@ export default function BookListPage() {
         </div>
       )}
 
-      {/* MODAL HAPUS */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 bg-venice-blue-950/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-merino-200 text-center animate-in fade-in zoom-in-95">

@@ -3,8 +3,12 @@ import pkg from 'pg';
 import inquirer from 'inquirer';
 import dotenv from 'dotenv';
 
-// Import hanya CategorySeeder
+// Import Semua Seeders
+import { seedMySQL as seedTagsMySQL, seedPostgres as seedTagsPostgres } from './TagsSeeder.js';
+import { seedMySQL as seedUsersMySQL, seedPostgres as seedUsersPostgres } from './UsersSeeder.js';
 import { seedMySQL as seedCategoriesMySQL, seedPostgres as seedCategoriesPostgres } from './CategorySeeder.js';
+import { seedMySQL as seedPublishersMySQL, seedPostgres as seedPublishersPostgres } from './PublisherSeeder.js';
+import { seedMySQL as seedBooksMySQL, seedPostgres as seedBooksPostgres } from './BookSeeder.js';
 
 dotenv.config();
 const { Client: PgClient } = pkg;
@@ -24,9 +28,17 @@ async function runMySQLSeeder() {
   });
 
   try {
-    // Cukup jalankan CategorySeeder
-    await seedCategoriesMySQL(connection);
-    console.log('\n🎉 Seeder Kategori MySQL Berhasil Dijalankan!');
+    await seedTagsMySQL(connection);
+    await seedUsersMySQL(connection);
+    
+    // Ambil ID Kategori & Publisher untuk dipass ke BookSeeder
+    const { firstCatId, firstSubCatId } = await seedCategoriesMySQL(connection);
+    const { firstPublisherId } = await seedPublishersMySQL(connection);
+
+    // Jalankan BookSeeder dengan FK terikat
+    await seedBooksMySQL(connection, firstCatId, firstSubCatId, firstPublisherId);
+
+    console.log('\n🎉 Semua Seeder Database MySQL Berhasil Dijalankan!');
   } finally {
     await connection.end();
   }
@@ -46,10 +58,17 @@ async function runPostgresSeeder() {
   try {
     await client.connect();
 
-    // Cukup jalankan CategorySeeder
-    await seedCategoriesPostgres(client);
+    await seedTagsPostgres(client);
+    await seedUsersPostgres(client);
 
-    console.log('\n🎉 Seeder Kategori PostgreSQL Berhasil Dijalankan!');
+    // Ambil ID Kategori & Publisher untuk dipass ke BookSeeder
+    const { firstCatId, firstSubCatId } = await seedCategoriesPostgres(client);
+    const { firstPublisherId } = await seedPublishersPostgres(client);
+
+    // Jalankan BookSeeder dengan FK terikat
+    await seedBooksPostgres(client, firstCatId, firstSubCatId, firstPublisherId);
+
+    console.log('\n🎉 Semua Seeder Database PostgreSQL Berhasil Dijalankan!');
   } finally {
     await client.end();
   }
@@ -61,7 +80,7 @@ async function runPostgresSeeder() {
 async function main() {
   const answers = await inquirer.prompt([
     {
-      type: 'select', // Inquirer v10+ breaking change fix
+      type: 'select', // Inquirer v10+ compatibility
       name: 'targetDb',
       message: 'Pilih target database untuk seeding:',
       choices: [

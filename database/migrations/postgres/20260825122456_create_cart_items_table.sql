@@ -1,5 +1,5 @@
 -- Migration (PostgreSQL / Supabase): create_cart_items_table
--- Created at: 2026-08-24T18:05:39.019Z
+-- Created at: 2026-08-25T05:24:56.355Z
 
 CREATE TABLE IF NOT EXISTS cart_items (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

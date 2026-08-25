@@ -1,0 +1,8 @@
+-- Migration (MySQL): create_tags_table
+-- Created at: 2026-08-25T00:37:20.635Z
+
+CREATE TABLE IF NOT EXISTS example (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

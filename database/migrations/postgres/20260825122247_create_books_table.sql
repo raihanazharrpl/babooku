@@ -1,10 +1,11 @@
 -- Migration (PostgreSQL / Supabase): create_books_table
--- Created at: 2026-08-24T18:05:21.505Z
+-- Created at: 2026-08-25T05:22:47.990Z
 
 CREATE TABLE IF NOT EXISTS books (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     category_id BIGINT NOT NULL,
     subcategory_id BIGINT,
+    publisher_id BIGINT, -- Diubah ke FK mengarah ke publishers(id)
     title VARCHAR(255) NOT NULL,
     author VARCHAR(100) NOT NULL,
     description TEXT,
@@ -18,7 +19,9 @@ CREATE TABLE IF NOT EXISTS books (
     CONSTRAINT fk_books_category
         FOREIGN KEY (category_id) REFERENCES categories(id),
     CONSTRAINT fk_books_subcategory
-        FOREIGN KEY (subcategory_id) REFERENCES subcategories(id) ON DELETE SET NULL
+        FOREIGN KEY (subcategory_id) REFERENCES subcategories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_books_publisher
+        FOREIGN KEY (publisher_id) REFERENCES publishers(id) ON DELETE SET NULL
 );
 
 ALTER TABLE books ENABLE ROW LEVEL SECURITY;

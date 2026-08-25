@@ -38,7 +38,8 @@
     "migrate": "node app/Commands/migrate.js",
     "make:secret": "node app/Commands/makeSecret.js",
     "db:seed": "node database/seeders/DatabaseSeeder.js",
-    "make:env-example": "node app/Commands/makeEnvExample.js"
+    "make:env-example": "node app/Commands/makeEnvExample.js",
+    "make:api-vercel": "node app/Commands/makeApiVercel.js"
   },
   "imports": {
     "#config/*": "./config/*",
