@@ -12,7 +12,7 @@ const { Client: PgClient } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Helper membaca folder migrasi
+// Helper membaca folder migrasi & memfilter file yang belum dijalankan
 function getPendingMigrations(dbType, executedMigrations) {
   const migrationsDir = path.resolve(__dirname, `../../database/migrations/${dbType}`);
   
@@ -21,6 +21,7 @@ function getPendingMigrations(dbType, executedMigrations) {
   }
 
   const files = fs.readdirSync(migrationsDir).sort();
+  // Hanya ambil file .sql yang BELUM ada di tabel 'migrations'
   const pendingFiles = files.filter(
     (file) => file.endsWith('.sql') && !executedMigrations.includes(file)
   );
@@ -29,10 +30,10 @@ function getPendingMigrations(dbType, executedMigrations) {
 }
 
 // ----------------------------------------------------
-// MIGRASI MYSQL
+// MIGRASI MYSQL (SAFE - NO DROP)
 // ----------------------------------------------------
-async function runMySQL(isFresh = false) {
-  console.log(`\n🚀 Memulai migrasi ke MySQL ${isFresh ? '(FRESH)' : ''}...\n`);
+async function runMySQL() {
+  console.log(`\n🚀 Memulai pembaruan migrasi ke MySQL...\n`);
   const dbName = process.env.DB_NAME || 'babooku_db';
 
   const connection = await mysql.createConnection({
@@ -44,15 +45,11 @@ async function runMySQL(isFresh = false) {
   });
 
   try {
-    if (isFresh) {
-      console.log(`🔥 Dropping database \x1b[31m${dbName}\x1b[0m...`);
-      await connection.query(`DROP DATABASE IF EXISTS \`${dbName}\`;`);
-      console.log('✨ Database berhasil dihapus.\n');
-    }
-
+    // Pastikan DB ada (Tanpa Hapus Data!)
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
     await connection.query(`USE \`${dbName}\`;`);
 
+    // Pastikan Tabel Migrations ada
     await connection.query(`
       CREATE TABLE IF NOT EXISTS migrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,23 +58,30 @@ async function runMySQL(isFresh = false) {
       );
     `);
 
+    // Ambil daftar file yang sudah dieksekusi sebelumnya
     const [rows] = await connection.query('SELECT migration FROM migrations');
     const executed = rows.map((r) => r.migration);
     
     const { migrationsDir, pendingFiles } = getPendingMigrations('mysql', executed);
 
     if (pendingFiles.length === 0) {
-      console.log('✨ Database MySQL sudah up-to-date!');
+      console.log('✨ Database MySQL sudah up-to-date! Tidak ada tabel/skema baru.');
       return;
     }
+
+    console.log(`📌 Ditemukan ${pendingFiles.length} file migrasi baru yang belum dieksekusi.\n`);
 
     for (const file of pendingFiles) {
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
       if (!sql.trim()) continue;
 
-      console.log(`⏳ Running (MySQL): \x1b[33m${file}\x1b[0m`);
+      console.log(`⏳ Executing: \x1b[33m${file}\x1b[0m`);
+      
+      // Jalankan query SQL migrasi baru
       await connection.query(sql);
+      // Catat ke tabel migrations agar tidak dijalankan ulang nanti
       await connection.query('INSERT INTO migrations (migration) VALUES (?)', [file]);
+      
       console.log(`✅ Success: \x1b[32m${file}\x1b[0m\n`);
     }
   } finally {
@@ -86,10 +90,14 @@ async function runMySQL(isFresh = false) {
 }
 
 // ----------------------------------------------------
-// MIGRASI POSTGRESQL / SUPABASE
+// MIGRASI POSTGRESQL / SUPABASE (SAFE - NO DROP)
 // ----------------------------------------------------
-async function runPostgres(isFresh = false) {
-  console.log(`\n🚀 Memulai migrasi ke Supabase Postgres ${isFresh ? '(FRESH)' : ''}...\n`);
+async function runPostgres() {
+  console.log(`\n🚀 Memulai pembaruan migrasi ke Supabase Postgres...\n`);
+
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL tidak ditemukan di file .env');
+  }
 
   const client = new PgClient({
     connectionString: process.env.DATABASE_URL,
@@ -99,16 +107,7 @@ async function runPostgres(isFresh = false) {
   try {
     await client.connect();
 
-    if (isFresh) {
-      console.log('🔥 Dropping schema \x1b[31mpublic\x1b[0m di Supabase...');
-      // Menghapus schema public beserta seluruh isi tabel & tipe datanya, lalu membuat ulang
-      await client.query('DROP SCHEMA public CASCADE;');
-      await client.query('CREATE SCHEMA public;');
-      await client.query('GRANT ALL ON SCHEMA public TO postgres;');
-      await client.query('GRANT ALL ON SCHEMA public TO public;');
-      console.log('✨ Schema public berhasil di-reset.\n');
-    }
-
+    // Pastikan Tabel Migrations ada (Tanpa Hapus Data!)
     await client.query(`
       CREATE TABLE IF NOT EXISTS migrations (
         id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -117,23 +116,30 @@ async function runPostgres(isFresh = false) {
       );
     `);
 
+    // Ambil daftar file yang sudah dieksekusi sebelumnya
     const { rows } = await client.query('SELECT migration FROM migrations');
     const executed = rows.map((r) => r.migration);
 
     const { migrationsDir, pendingFiles } = getPendingMigrations('postgres', executed);
 
     if (pendingFiles.length === 0) {
-      console.log('✨ Database PostgreSQL Supabase sudah up-to-date!');
+      console.log('✨ Database Supabase sudah up-to-date! Tidak ada tabel/skema baru.');
       return;
     }
+
+    console.log(`📌 Ditemukan ${pendingFiles.length} file migrasi baru yang belum dieksekusi.\n`);
 
     for (const file of pendingFiles) {
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
       if (!sql.trim()) continue;
 
-      console.log(`⏳ Running (Postgres): \x1b[33m${file}\x1b[0m`);
+      console.log(`⏳ Executing (Supabase): \x1b[33m${file}\x1b[0m`);
+      
+      // Jalankan query SQL migrasi baru
       await client.query(sql);
+      // Catat ke tabel migrations agar tidak dijalankan ulang nanti
       await client.query('INSERT INTO migrations (migration) VALUES ($1)', [file]);
+      
       console.log(`✅ Success: \x1b[32m${file}\x1b[0m\n`);
     }
   } finally {
@@ -149,34 +155,34 @@ async function main() {
     {
       type: 'select',
       name: 'targetDb',
-      message: 'Pilih target database untuk migrasi:',
+      message: 'Pilih target database untuk update skema:',
       choices: [
         { name: '🐬 MySQL (Local / Server)', value: 'mysql' },
-        { name: '⚡ PostgreSQL (Supabase)', value: 'postgres' },
+        { name: '⚡ PostgreSQL (Supabase Cloud)', value: 'postgres' },
       ],
     },
     {
-      type: 'select',
-      name: 'mode',
-      message: 'Pilih mode eksekusi migrasi:',
-      choices: [
-        { name: '⏩ Run Pending Migrations (Aman / Standard)', value: 'standard' },
-        { name: '💥 Fresh Migration (HAPUS DB & Ulang dari awal)', value: 'fresh' },
-      ],
+      type: 'confirm',
+      name: 'confirmRun',
+      message: 'Jalankan pengecekan & update tabel baru (Aman / Data lama tetap utuh)?',
+      default: true,
     },
   ]);
 
-  try {
-    const isFresh = answers.mode === 'fresh';
+  if (!answers.confirmRun) {
+    console.log('\x1b[36m%s\x1b[0m', '🚫 Eksekusi dibatalkan.');
+    process.exit(0);
+  }
 
+  try {
     if (answers.targetDb === 'mysql') {
-      await runMySQL(isFresh);
+      await runMySQL();
     } else {
-      await runPostgres(isFresh);
+      await runPostgres();
     }
-    console.log('🎉 Seluruh proses migrasi selesai!');
+    console.log('🎉 Seluruh skema database berhasil diperbarui tanpa menghapus data!');
   } catch (error) {
-    console.error('\x1b[31m%s\x1b[0m', '\n❌ Migrasi gagal:', error.message);
+    console.error('\x1b[31m%s\x1b[0m', '\n❌ Update migrasi gagal:', error.message);
   }
 }
 

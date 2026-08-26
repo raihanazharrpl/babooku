@@ -15,6 +15,14 @@ import discountsHandler from './routes/api/discounts.js'; // <-- Tambahkan ini
 import bookLikesHandler from './routes/api/bookLikes.js'; // Impor di bagian atas
 import publishersHandler from './routes/api/publishers.js'; // Impor di bagian atas
 import landingHandler from './app/Controllers/landing.controller.js';
+import ordersHandler from './routes/api/orders.js';
+import cartHandler from './routes/api/cart.js';
+// 1. Impor cartHandler di bagian atas server.js bersama handler lainnya
+
+// ... (kode penyiapan app Express lainnya)
+
+// 2. Daftarkan endpoint API Keranjang
+
 
 // Daftarkan di bagian API:
 
@@ -38,6 +46,8 @@ app.all('/api/tags', (req, res) => tagsHandler(req, res)); // <-- Tambahkan ini
 app.all('/api/discounts', (req, res) => discountsHandler(req, res));
 app.all('/api/books/likes', (req, res) => bookLikesHandler(req, res));
 app.all('/api/publishers', (req, res) => publishersHandler(req, res));
+app.all('/api/orders', (req, res) => ordersHandler(req, res));
+app.all('/api/cart', (req, res) => cartHandler(req, res));
 
 app.all('/api/landing', (req, res) => landingHandler(req, res));
 if (process.env.NODE_ENV !== 'production') {

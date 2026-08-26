@@ -1,92 +1,132 @@
 // resources/pages/CartPage/index.jsx
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { 
   ShoppingBag, Trash2, Plus, Minus, ArrowRight, 
-  BookOpen, Smartphone, Headphones, ShieldCheck, Tag,
-  ArrowLeft, Check
+  BookOpen, ShieldCheck, Tag, ArrowLeft, Check, Loader2
 } from 'lucide-react'
+
+import { getCoverUrl } from '#resources/helpers/assetsHelper.js';
+import { formatRupiah } from '#resources/helpers/priceHelper.js';
 
 export default function CartPage() {
   const navigate = useNavigate()
 
-  // --- MOCK DATA ITEMS KERANJANG ---
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      title: 'Filosofi Teras',
-      author: 'Henry Manampiring',
-      format: 'physical',
-      price: 98000,
-      originalPrice: 115000,
-      quantity: 1,
-      selected: true,
-      cover: '/storage/assets/images/ex.png'
-    },
-    {
-      id: 2,
-      title: 'Atomic Habits (Digital Edition)',
-      author: 'James Clear',
-      format: 'ebook',
-      price: 85000,
-      originalPrice: null,
-      quantity: 1,
-      selected: true,
-      cover: '/storage/assets/images/statis/book2.webp'
-    },
-    {
-      id: 3,
-      title: 'Sapiens: Riwayat Singkat (Audiobook)',
-      author: 'Yuval Noah Harari',
-      format: 'audiobook',
-      price: 120000,
-      originalPrice: 150000,
-      quantity: 1,
-      selected: false,
-      cover: '/storage/assets/images/statis/book4.webp'
-    }
-  ])
+  const [cartItems, setCartItems] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedIds, setSelectedIds] = useState([]) // Menyimpan ID cart_items yang dicentang
 
-  // --- HANDLER CHECKBOX & QUANTITY ---
+  // 1. FETCH DATA KERANJANG DARI BACKEND (/api/cart)
+  useEffect(() => {
+    fetchCartData()
+  }, [])
+
+  const fetchCartData = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/cart', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const json = await res.json()
+
+      if (json.success) {
+        const items = json.data?.items || []
+        setCartItems(items)
+        // Default: Centang semua item saat pertama kali dimuat
+        setSelectedIds(items.map(i => i.id))
+      }
+    } catch (error) {
+      console.error('Gagal memuat keranjang:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 2. HANDLER CHECKBOX
   const toggleSelectAll = () => {
-    const allSelected = cartItems.every(item => item.selected)
-    setCartItems(cartItems.map(item => ({ ...item, selected: !allSelected })))
+    if (selectedIds.length === cartItems.length) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(cartItems.map(i => i.id))
+    }
   }
 
   const toggleSelectItem = (id) => {
-    setCartItems(cartItems.map(item => 
-      item.id === id ? { ...item, selected: !item.selected } : item
-    ))
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(itemId => itemId !== id))
+    } else {
+      setSelectedIds([...selectedIds, id])
+    }
   }
 
-  const updateQuantity = (id, delta) => {
-    setCartItems(cartItems.map(item => {
-      if (item.id === id) {
-        const newQty = item.quantity + delta
-        return newQty > 0 ? { ...item, quantity: newQty } : item
+  // 3. UPDATE KUANTITAS ITEM KE BACKEND (PUT /api/cart)
+  const handleUpdateQuantity = async (cartId, currentQty, delta) => {
+    const token = localStorage.getItem('token')
+    const newQty = currentQty + delta
+    if (newQty <= 0) return
+
+    // Optimistic Update UI
+    setCartItems(prev => prev.map(item => item.id === cartId ? { ...item, quantity: newQty } : item))
+
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ cart_id: cartId, quantity: newQty })
+      })
+      const json = await res.json()
+      if (!json.success) {
+        fetchCartData() // Revert jika gagal
       }
-      return item
-    }))
+    } catch (error) {
+      fetchCartData()
+    }
   }
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id))
+  // 4. HAPUS ITEM DARI KERANJANG (DELETE /api/cart)
+  const handleRemoveItem = async (cartId) => {
+    const token = localStorage.getItem('token')
+    
+    setCartItems(prev => prev.filter(item => item.id !== cartId))
+    setSelectedIds(prev => prev.filter(id => id !== cartId))
+
+    try {
+      await fetch(`/api/cart?id=${cartId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.error('Gagal menghapus item:', error)
+    }
   }
 
-  // --- PERHITUNGAN RINGKASAN ---
-  const selectedItems = cartItems.filter(item => item.selected)
-  const totalSelectedCount = selectedItems.reduce((acc, item) => acc + item.quantity, 0)
-  const subtotal = selectedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+  // PERHITUNGAN RINGKASAN
+  const selectedItems = cartItems.filter(item => selectedIds.includes(item.id))
+  const totalSelectedCount = selectedItems.reduce((acc, item) => acc + Number(item.quantity), 0)
+  const subtotal = selectedItems.reduce((acc, item) => acc + (Number(item.price) * Number(item.quantity)), 0)
 
-  // Helper Format Rupiah
-  const formatRupiah = (number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-merino-50 flex flex-col items-center justify-center text-venice-blue-800">
+        <Loader2 className="w-8 h-8 animate-spin mb-2" />
+        <p className="font-bold text-sm">Memuat keranjang belanja...</p>
+      </div>
+    )
   }
 
   return (
     <div className="bg-merino-50 min-h-screen font-sans text-venice-blue-950 pb-20">
       
-      {/* 1. HEADER SIMPLE KERANJANG */}
+      {/* 1. HEADER */}
       <div className="bg-white border-b border-merino-300/60 py-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <button 
@@ -98,7 +138,7 @@ export default function CartPage() {
           <span className="font-black text-lg text-venice-blue-900 tracking-tight flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-rock-blue-dark" /> Keranjang Belanja
           </span>
-          <div className="w-20 hidden sm:block"></div> {/* Spacer balance */}
+          <div className="w-20 hidden sm:block"></div>
         </div>
       </div>
 
@@ -130,24 +170,26 @@ export default function CartPage() {
               <div className="bg-white rounded-2xl p-4 border border-merino-300/60 shadow-sm flex items-center justify-between">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                    cartItems.length > 0 && cartItems.every(i => i.selected) 
+                    cartItems.length > 0 && selectedIds.length === cartItems.length
                       ? 'bg-venice-blue-900 border-venice-blue-900' 
                       : 'border-merino-300 bg-white'
                   }`}>
                     <input 
                       type="checkbox" 
-                      checked={cartItems.length > 0 && cartItems.every(i => i.selected)}
+                      checked={cartItems.length > 0 && selectedIds.length === cartItems.length}
                       onChange={toggleSelectAll}
                       className="sr-only"
                     />
-                    {cartItems.every(i => i.selected) && <Check className="w-3.5 h-3.5 text-white" />}
+                    {selectedIds.length === cartItems.length && <Check className="w-3.5 h-3.5 text-white" />}
                   </div>
                   <span className="text-sm font-bold text-venice-blue-900">Pilih Semua ({cartItems.length})</span>
                 </label>
 
-                {selectedItems.length > 0 && (
+                {selectedIds.length > 0 && (
                   <button 
-                    onClick={() => setCartItems(cartItems.filter(i => !i.selected))}
+                    onClick={() => {
+                      selectedIds.forEach(id => handleRemoveItem(id))
+                    }}
                     className="text-xs font-bold text-red-600 hover:text-red-700 transition-colors"
                   >
                     Hapus Pilihan
@@ -157,95 +199,88 @@ export default function CartPage() {
 
               {/* LIST ITEM */}
               <div className="bg-white rounded-2xl border border-merino-300/60 shadow-sm divide-y divide-merino-200">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
-                    
-                    {/* CHECKBOX ITEM */}
-                    <div 
-                      onClick={() => toggleSelectItem(item.id)}
-                      className={`mt-6 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer shrink-0 transition-colors ${
-                        item.selected 
-                          ? 'bg-venice-blue-900 border-venice-blue-900' 
-                          : 'border-merino-300 bg-white'
-                      }`}
-                    >
-                      {item.selected && <Check className="w-3.5 h-3.5 text-white" />}
-                    </div>
+                {cartItems.map((item) => {
+                  const isSelected = selectedIds.includes(item.id)
 
-                    {/* COVER */}
-                    <img 
-                      src={item.cover} 
-                      alt={item.title} 
-                      className="w-16 sm:w-20 aspect-[3/4] object-cover rounded-xl bg-merino-100 border border-merino-200 shrink-0"
-                    />
-
-                    {/* DETAIL BUKU */}
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-venice-blue-900 text-merino flex items-center gap-1 w-max">
-                          {item.format === 'physical' && <><BookOpen className="w-3 h-3 text-rock-blue-light" /> Buku Fisik</>}
-                          {item.format === 'ebook' && <><Smartphone className="w-3 h-3 text-rock-blue-light" /> E-Book</>}
-                          {item.format === 'audiobook' && <><Headphones className="w-3 h-3 text-rock-blue-light" /> Audiobook</>}
-                        </span>
-                        <button 
-                          onClick={() => removeItem(item.id)}
-                          className="text-slate-400 hover:text-red-600 p-1 transition-colors"
-                          title="Hapus Buku"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                  return (
+                    <div key={item.id} className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                      
+                      {/* CHECKBOX ITEM */}
+                      <div 
+                        onClick={() => toggleSelectItem(item.id)}
+                        className={`mt-6 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer shrink-0 transition-colors ${
+                          isSelected 
+                            ? 'bg-venice-blue-900 border-venice-blue-900' 
+                            : 'border-merino-300 bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                       </div>
 
-                      <h3 className="font-bold text-sm sm:text-base text-venice-blue-950 truncate leading-tight">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-venice-blue-700/80">{item.author}</p>
+                      {/* COVER BUKU */}
+                      <img 
+                        src={item.cover_image ? getCoverUrl(item.cover_image) : 'https://via.placeholder.com/150'} 
+                        alt={item.title} 
+                        className="w-16 sm:w-20 aspect-[3/4] object-cover rounded-xl bg-merino-100 border border-merino-200 shrink-0"
+                      />
 
-                      <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        {/* HARGA */}
-                        <div>
-                          {item.originalPrice && (
-                            <span className="text-[10px] sm:text-xs line-through text-slate-400 block">
-                              {formatRupiah(item.originalPrice)}
-                            </span>
-                          )}
+                      {/* DETAIL BUKU */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-venice-blue-900 text-merino flex items-center gap-1 w-max">
+                            <BookOpen className="w-3 h-3 text-rock-blue-light" /> Buku Fisik
+                          </span>
+                          <button 
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="text-slate-400 hover:text-red-600 p-1 transition-colors"
+                            title="Hapus Buku"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <h3 className="font-bold text-sm sm:text-base text-venice-blue-950 truncate leading-tight">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-venice-blue-700/80">{item.author}</p>
+
+                        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <span className="font-black text-sm sm:text-base text-venice-blue-900">
                             {formatRupiah(item.price)}
                           </span>
-                        </div>
 
-                        {/* QUANTITY COUNTER */}
-                        <div className="flex items-center border border-merino-300 rounded-xl bg-merino-50 w-max">
-                          <button 
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="p-1.5 text-venice-blue-800 hover:bg-merino-200 rounded-l-xl transition-colors disabled:opacity-40"
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span className="px-3 text-xs font-bold text-venice-blue-950 min-w-[2rem] text-center">
-                            {item.quantity}
-                          </span>
-                          <button 
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="p-1.5 text-venice-blue-800 hover:bg-merino-200 rounded-r-xl transition-colors"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
+                          {/* COUNTER QUANTITY */}
+                          <div className="flex items-center border border-merino-300 rounded-xl bg-merino-50 w-max">
+                            <button 
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                              className="p-1.5 text-venice-blue-800 hover:bg-merino-200 rounded-l-xl transition-colors disabled:opacity-40"
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="px-3 text-xs font-bold text-venice-blue-950 min-w-[2rem] text-center">
+                              {item.quantity}
+                            </span>
+                            <button 
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                              className="p-1.5 text-venice-blue-800 hover:bg-merino-200 rounded-r-xl transition-colors"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
               </div>
 
             </div>
 
-            {/* --- RIGHT SECTION: SUMMARY & CHECKOUT CTA (4 COLS) --- */}
+            {/* --- RIGHT SECTION: SUMMARY (4 COLS) --- */}
             <div className="lg:col-span-4 space-y-6">
               
-              {/* RINGKASAN BELANJA CARD */}
               <div className="bg-white rounded-2xl p-6 border border-merino-300/60 shadow-sm space-y-4 sticky top-24">
                 <h3 className="font-bold text-base text-venice-blue-900 pb-3 border-b border-merino-200">
                   Ringkasan Belanja
@@ -268,13 +303,11 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* INFO SINGKAT ONGKIR */}
                 <div className="flex items-center gap-2 text-[11px] text-venice-blue-700/80 bg-merino-50 p-2.5 rounded-xl border border-merino-200">
                   <Tag className="w-4 h-4 text-rock-blue-dark shrink-0" />
                   <span>Ongkos kirim & voucher diskon akan dihitung di halaman checkout.</span>
                 </div>
 
-                {/* TOMBOL KE CHECKOUT */}
                 <button
                   onClick={() => navigate('/checkout')}
                   disabled={selectedItems.length === 0}
