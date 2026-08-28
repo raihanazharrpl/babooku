@@ -16,11 +16,6 @@ import publishersHandler from './routes/api/publishers.js';
 import landingHandler from './app/Controllers/landing.controller.js';
 import ordersHandler from './routes/api/orders.js';
 import cartHandler from './routes/api/cart.js';
-import otpHandler from './routes/api/otp.js'; // <-- Impor handler OTP
-
-// WA Socket & Bot Integrations
-import { initWhatsApp } from './resources/utils/whatsappSocket.js';
-import { listenOtpBot } from './resources/libs/otpBot.js';
 
 dotenv.config();
 
@@ -42,28 +37,13 @@ app.all('/api/books/likes', (req, res) => bookLikesHandler(req, res));
 app.all('/api/publishers', (req, res) => publishersHandler(req, res));
 app.all('/api/orders', (req, res) => ordersHandler(req, res));
 app.all('/api/cart', (req, res) => cartHandler(req, res));
-app.all('/api/otp', (req, res) => otpHandler(req, res)); // <-- Register endpoint /api/otp
-
 app.all('/api/landing', (req, res) => landingHandler(req, res));
 
-// Inisialisasi WhatsApp Service & Express Server
-async function startServer() {
-  try {
-    // Start WhatsApp Socket Connection
-    await initWhatsApp();
-    listenOtpBot();
-
-    if (process.env.NODE_ENV !== 'production') {
-      const PORT = process.env.PORT || 3000;
-      app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
-      });
-    }
-  } catch (err) {
-    console.error('Failed to start WhatsApp Service:', err);
-  }
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
 }
-
-startServer();
 
 export default app;
