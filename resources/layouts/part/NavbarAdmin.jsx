@@ -1,6 +1,6 @@
 // resources/layouts/part/NavbarAdmin.jsx
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { useAuthStore } from '@/resources/stores/useAuthStore';
 import { 
   Menu, Bell, Mail, ChevronRight, User, LogOut 
