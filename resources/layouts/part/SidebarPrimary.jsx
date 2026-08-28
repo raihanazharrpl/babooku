@@ -1,6 +1,6 @@
 // resources/layouts/part/Sidebar.jsx
 import React from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuthStore } from '@/resources/stores/useAuthStore'
 import { 
   Home, Store, Phone, Briefcase, User, LogOut, 

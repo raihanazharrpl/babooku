@@ -1,6 +1,6 @@
 // resources/pages/BookDetailPage/index.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router'
 import { 
   Star, ShoppingCart, Heart, Share2, BookOpen, 
   Smartphone, Headphones, ShieldCheck, Truck, CheckCircle2, 

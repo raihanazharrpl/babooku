@@ -1,6 +1,6 @@
 // resources/pages/CheckoutPage/index.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { 
   MapPin, Truck, CreditCard, ShieldCheck, Tag, 
   ChevronRight, Check, BookOpen, 

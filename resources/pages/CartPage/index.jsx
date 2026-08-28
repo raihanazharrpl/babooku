@@ -1,6 +1,6 @@
 // resources/pages/CartPage/index.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router'
 import { 
   ShoppingBag, Trash2, Plus, Minus, ArrowRight, 
   BookOpen, ShieldCheck, Tag, ArrowLeft, Check, Loader2

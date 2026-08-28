@@ -1,6 +1,6 @@
 // resources/pages/HomePage/index.jsx
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { 
   Sparkles, Search, ShoppingBag, Bell, Bookmark, Clock, 
   ChevronRight, ArrowRight, Truck, CheckCircle2, Star, 

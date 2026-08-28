@@ -1,6 +1,6 @@
 // resources/layouts/AppLayout.jsx
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router'
 import NavbarPrimary from './part/NavbarPrimary'
 import SidebarPrimary from './part/SidebarPrimary' // <-- Diperbarui di sini
 import FooterPrimary from './part/FooterPrimary'

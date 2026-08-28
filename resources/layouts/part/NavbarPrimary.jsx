@@ -1,6 +1,6 @@
 // resources/layouts/part/NavbarPrimary.jsx
 import React from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuthStore } from '@/resources/stores/useAuthStore'
 import { 
   Menu, X, Home, Store, Phone, Briefcase, 

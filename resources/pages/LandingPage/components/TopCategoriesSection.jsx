@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { ChevronRight, Loader2 } from 'lucide-react';
 
 export default function TopCategoriesSection({ categories, isLoading }) {

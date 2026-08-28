@@ -1,6 +1,6 @@
 // resources/pages/LoginPage/index.jsx
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router'
 import { useAuthStore } from '../../../stores/useAuthStore'
 import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 

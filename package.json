@@ -52,6 +52,7 @@
   "dependencies": {
     "@google/genai": "^2.18.0",
     "@itsliaaa/baileys": "^0.3.18-final",
+    "@reduxjs/toolkit": "^2.12.0",
     "@supabase/supabase-js": "^2.112.2",
     "bcryptjs": "^3.0.3",
     "busboy": "^1.6.0",
@@ -62,21 +63,21 @@
     "framer-motion": "^13.1.0",
     "inquirer": "^14.1.0",
     "jsonwebtoken": "^9.0.3",
-    "lucide-react": "^0.300.0",
+    "lucide-react": "^1.0.0",
     "mysql2": "^3.23.2",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router-dom": "^6.21.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "^8.3.1",
     "recharts": "^3.10.1",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.5.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.4.16",
     "dotenv": "^17.4.2",
@@ -90,6 +91,9 @@
     "vite": "^8.2.2"
   },
   "allowScripts": {
-    "esbuild@0.21.5": true
+    "esbuild@0.21.5": true,
+    "@google/genai@2.18.0": true,
+    "@itsliaaa/baileys@0.3.18-final": true,
+    "protobufjs@7.6.5": true
   }
 }
