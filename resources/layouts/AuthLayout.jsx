@@ -1,6 +1,6 @@
 // resources/layouts/AuthLayout.jsx
 import React from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router'
 import NavbarBack from './part/NavbarBack'
 
 export default function AuthLayout() {

@@ -1,6 +1,6 @@
 // resources/layouts/part/NavbarBack.jsx
 import React from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router'
 import { ArrowLeft, Home } from 'lucide-react'
 
 export default function NavbarBack({ title }) {

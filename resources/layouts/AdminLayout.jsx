@@ -1,6 +1,6 @@
 // resources/layouts/AdminLayout.jsx
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import NavbarAdmin from './part/NavbarAdmin';
 import SidebarAdmin from './part/SidebarAdmin';
 

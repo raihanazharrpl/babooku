@@ -1,6 +1,6 @@
 // resources/layouts/part/SidebarAdmin.jsx
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '@/resources/stores/useAuthStore';
 import { 
   LayoutDashboard, BookOpen, FolderTree, Tags, 
